@@ -48,7 +48,7 @@ const Login = () => {
   ] = useLoginUserMutation();
   const navigate = useNavigate();
 
-  const changeInputHandler = (e, type) => {
+  const changeInputHandler = (e, type) => { 
     const { name, value } = e.target;
     if (type === "signup") {
       setSignupInput({ ...signupInput, [name]: value });
@@ -68,14 +68,14 @@ const Login = () => {
       toast.success(registerData.message || "Signup successful.")
     }
     if(registerError){
-      toast.error(registerError.data.message || "Signup Failed");
+      toast.error(registerError?.data?.message || "Signup Failed");
     }
     if(loginIsSuccess && loginData){
       toast.success(loginData.message || "Login successful.");
       navigate("/");
     }
     if(loginError){ 
-      toast.error(loginError.data.message || "login Failed");
+      toast.error(loginError?.data?.message || "login Failed");
     }
   }, [
     loginIsLoading,
@@ -84,6 +84,9 @@ const Login = () => {
     registerData,
     loginError,
     registerError,
+    registerIsSuccess,
+    loginIsSuccess,
+    navigate
   ]);
 
   return (
