@@ -24,19 +24,17 @@ const Profile = () => {
   const [name, setName] = useState("");
   const [profilePhoto, setProfilePhoto] = useState("");
 
-  const { data, isLoading, refetch } = useLoadUserQuery();
+  const { data, isLoading, isError, error, refetch } = useLoadUserQuery();
   const [
     updateUser,
     {
       data: updateUserData,
       isLoading: updateUserIsLoading,
-      isError,
-      error,
+      isError: isUpdateError,
+      error: updateError,
       isSuccess,
     },
   ] = useUpdateUserMutation();
-
-  console.log(data);
 
   const onChangeHandler = (e) => {
     const file = e.target.files?.[0];
@@ -57,19 +55,19 @@ const Profile = () => {
   useEffect(() => {
     if (isSuccess) {
       refetch();
-      toast.success(data.message || "Profile updated.");
+      toast.success(updateUserData?.message || "Profile updated.");
     }
-    if (isError) {
-      toast.error(error.message || "Failed to update profile");
+    if (isUpdateError) {
+      toast.error(updateError?.message || "Failed to update profile");
     }
-  }, [error, updateUserData, isSuccess, isError]);
+  }, [updateError, updateUserData, isSuccess, isUpdateError]);
 
   if (isLoading) return <h1>Profile Loading...</h1>;
+  if (isError) return <h1>Error: {error?.message || "Failed to load profile"}</h1>;
 
-  const user = data && data.user;
+  const user = data?.user;
 
-  console.log(user);
-  
+  if (!user) return <h1>No user data found</h1>;
 
   return (
     <div className="max-w-4xl mx-auto px-4 my-10">
