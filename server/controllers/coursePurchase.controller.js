@@ -28,7 +28,7 @@ export const createCheckoutSession = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: "inr",
+            currency: "lkr",
             product_data: {
               name: course.courseTitle,
               images: [course.courseThumbnail],
@@ -39,15 +39,13 @@ export const createCheckoutSession = async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/course-progress/${courseId}`, // once payment successful redirect to course progress page
+      success_url: `http://localhost:5173/course-progress/${courseId}`, 
       cancel_url: `http://localhost:5173/course-detail/${courseId}`,
       metadata: {
         courseId: courseId,
         userId: userId,
       },
-      shipping_address_collection: {
-        allowed_countries: ["IN"], // Optionally restrict allowed countries
-      },
+      
     });
 
     if (!session.url) {
@@ -177,5 +175,70 @@ export const getAllPurchasedCourse = async (_, res) => {
     });
   } catch (error) {
     console.log(error);
+  }
+};
+
+
+export const getTotalRevenue = async (req, res) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    
+    const revenueData = await CoursePurchase.aggregate([
+      { 
+        $match: { 
+          status: "completed",
+          createdAt: { 
+            $gte: new Date(`${currentYear}-01-01`),
+            $lte: new Date(`${currentYear}-12-31`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$amount" },
+          totalSales: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: 1,
+          totalSales: 1
+        }
+      }
+    ]);
+
+    const result = revenueData[0] || { totalRevenue: 0, totalSales: 0 };
+
+    res.status(200).json({
+      success: true,
+      revenue: result.totalRevenue,
+      transactions: result.totalSales
+    });
+
+  } catch (error) {
+    console.error("Revenue calculation error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "収益データの取得に失敗しました",
+      error: error.message 
+    });
+  }
+};
+
+export const getAllPayouts = async (req, res) => {
+  try {
+    const payouts = await stripe.payouts.list({
+      limit: 100, // Adjust as needed
+    });
+
+    return res.status(200).json({
+      success: true,
+      payouts: payouts.data,
+    });
+  } catch (error) {
+    console.error("Error fetching payouts:", error);
+    res.status(500).json({ success: false, message: "Failed to get payouts" });
   }
 };
