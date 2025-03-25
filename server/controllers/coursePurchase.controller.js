@@ -179,66 +179,37 @@ export const getAllPurchasedCourse = async (_, res) => {
 };
 
 
-export const getTotalRevenue = async (req, res) => {
+
+export const getSuccessfulPaymentCount = async (_, res) => {
   try {
-    const currentYear = new Date().getFullYear();
-    
-    const revenueData = await CoursePurchase.aggregate([
-      { 
-        $match: { 
-          status: "completed",
-          createdAt: { 
-            $gte: new Date(`${currentYear}-01-01`),
-            $lte: new Date(`${currentYear}-12-31`)
-          }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" },
-          totalSales: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          totalRevenue: 1,
-          totalSales: 1
-        }
-      }
-    ]);
-
-    const result = revenueData[0] || { totalRevenue: 0, totalSales: 0 };
-
-    res.status(200).json({
-      success: true,
-      revenue: result.totalRevenue,
-      transactions: result.totalSales
-    });
-
+    const count = await CoursePurchase.countDocuments({ status: "completed" });
+    return res.status(200).json({ count });
   } catch (error) {
-    console.error("Revenue calculation error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "収益データの取得に失敗しました",
-      error: error.message 
-    });
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getAllPayouts = async (req, res) => {
+// Backend: payment.controller.js (add this endpoint)
+export const getStripeBalance = async (_, res) => {
   try {
-    const payouts = await stripe.payouts.list({
-      limit: 100, // Adjust as needed
-    });
+    const balance = await stripe.balance.retrieve();
+    
+    // Find USD balance
+    const usdBalance = {
+      available: balance.available.find(b => b.currency === 'usd')?.amount || 0,
+      pending: balance.pending.find(b => b.currency === 'usd')?.amount || 0
+    };
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      payouts: payouts.data,
+      balance: {
+        available: usdBalance.available / 100, // Convert cents to dollars
+        pending: usdBalance.pending / 100
+      }
     });
   } catch (error) {
-    console.error("Error fetching payouts:", error);
-    res.status(500).json({ success: false, message: "Failed to get payouts" });
+    console.error('Balance error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching balance' });
   }
 };

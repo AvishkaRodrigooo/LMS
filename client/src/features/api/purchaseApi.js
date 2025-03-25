@@ -9,6 +9,7 @@ export const purchaseApi = createApi({
     credentials: "include",
   }),
   endpoints: (builder) => ({
+    // Payment session creation
     createCheckoutSession: builder.mutation({
       query: (courseId) => ({
         url: "/checkout/create-checkout-session",
@@ -16,15 +17,35 @@ export const purchaseApi = createApi({
         body: { courseId },
       }),
     }),
+
+    // Course details with purchase status
     getCourseDetailWithStatus: builder.query({
       query: (courseId) => ({
         url: `/course/${courseId}/detail-with-status`,
         method: "GET",
       }),
     }),
+
+    // Purchased courses list
     getPurchasedCourses: builder.query({
       query: () => ({
         url: `/`,
+        method: "GET",
+      }),
+    }),
+
+    // Successful payments count
+    getSuccessfulPaymentCount: builder.query({
+      query: () => ({
+        url: `/successful-count`,
+        method: "GET",
+      }),
+    }),
+
+    // Stripe balance endpoint (new addition)
+    getStripeBalance: builder.query({
+      query: () => ({
+        url: "/balance",
         method: "GET",
       }),
     }),
@@ -35,4 +56,6 @@ export const {
   useCreateCheckoutSessionMutation,
   useGetCourseDetailWithStatusQuery,
   useGetPurchasedCoursesQuery,
+  useGetSuccessfulPaymentCountQuery,
+  useGetStripeBalanceQuery
 } = purchaseApi;
