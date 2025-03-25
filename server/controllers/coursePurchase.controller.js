@@ -213,3 +213,32 @@ export const getStripeBalance = async (_, res) => {
     res.status(500).json({ success: false, message: 'Error fetching balance' });
   }
 };
+
+export const getStripeTransactions = async (_, res) => {
+  try {
+    const transactions = await stripe.paymentIntents.list({
+      limit: 10,
+      expand: ['data.customer', 'data.payment_method']
+    });
+
+    const formattedTransactions = transactions.data.map(tx => ({
+      id: tx.id,
+      amount: tx.amount / 100,
+      currency: tx.currency.toUpperCase(),
+      created: new Date(tx.created * 1000),
+      customer_email: tx.customer?.email || 'No email',
+      payment_method: tx.payment_method?.card 
+        ? `${tx.payment_method.card.brand} ****${tx.payment_method.card.last4}`
+        : 'Unknown method',
+      status: tx.status
+    }));
+
+    res.status(200).json({
+      success: true,
+      transactions: formattedTransactions
+    });
+  } catch (error) {
+    console.error('Transaction error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching transactions' });
+  }
+};
