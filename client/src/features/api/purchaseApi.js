@@ -57,6 +57,13 @@ export const purchaseApi = createApi({
       }),
     }),
 
+    getTotalTransactionCount: builder.query({
+      query: () => ({
+        url: "/transaction-count",
+        method: "GET",
+      }),
+    }),
+
 
 
 
@@ -69,5 +76,6 @@ export const {
   useGetPurchasedCoursesQuery,
   useGetSuccessfulPaymentCountQuery,
   useGetStripeBalanceQuery,
-  useGetStripeTransactionsQuery
+  useGetStripeTransactionsQuery,
+  useGetTotalTransactionCountQuery
 } = purchaseApi;

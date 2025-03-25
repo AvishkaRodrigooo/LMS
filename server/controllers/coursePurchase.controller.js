@@ -226,19 +226,38 @@ export const getStripeTransactions = async (_, res) => {
       amount: tx.amount / 100,
       currency: tx.currency.toUpperCase(),
       created: new Date(tx.created * 1000),
-      customer_email: tx.customer?.email || 'No email',
+      customer_email: tx.customer?.email || 'No email', // Ensure this line exists
       payment_method: tx.payment_method?.card 
         ? `${tx.payment_method.card.brand} ****${tx.payment_method.card.last4}`
         : 'Unknown method',
       status: tx.status
     }));
 
-    res.status(200).json({
-      success: true,
-      transactions: formattedTransactions
-    });
+    res.status(200).json({ transactions: formattedTransactions });
   } catch (error) {
     console.error('Transaction error:', error);
-    res.status(500).json({ success: false, message: 'Error fetching transactions' });
+    res.status(500).json({ message: 'Error fetching transactions' });
+  }
+};
+
+export const getTotalTransactionCount = async (_, res) => {
+  try {
+    // Get count from Stripe
+    const transactions = await stripe.paymentIntents.list({
+      limit: 1 // Minimal limit since we only need the count
+    });
+    
+    // Return total count from Stripe
+    return res.status(200).json({ 
+      success: true,
+      count: transactions.data.length,
+      totalCount: transactions.has_more ? '100+' : transactions.data.length // Estimated count
+    });
+  } catch (error) {
+    console.error('Transaction count error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching transaction count' 
+    });
   }
 };

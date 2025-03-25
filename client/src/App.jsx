@@ -17,7 +17,7 @@ import CourseDetail from "./pages/student/CourseDetail";
 import CourseProgress from "./pages/student/CourseProgress";
 import SearchPage from "./pages/student/SearchPage";
 import AllUsers from "./pages/admin/user/AllUsers";
-
+import Payment from './pages/admin/payment/payment';
 import {
   AdminRoute,
   AuthenticatedUser,
@@ -108,6 +108,10 @@ const appRouter = createBrowserRouter([
           {
             path: "user",
             element: <AllUsers/>,
+          },
+          {
+            path: "payment",
+            element: <Payment/>,
           },
           {
             path: "course",

@@ -6,18 +6,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   useGetPurchasedCoursesQuery,
   useGetSuccessfulPaymentCountQuery,
   useGetStripeBalanceQuery,
-  useGetStripeTransactionsQuery,
 } from "@/features/api/purchaseApi";
 import {
   LineChart,
@@ -48,21 +39,14 @@ const Dashboard = () => {
     isLoading: balanceLoading,
     error: balanceError,
   } = useGetStripeBalanceQuery();
-  
-  const {
-    data: transactionsData,
-    isLoading: transactionsLoading,
-    error: transactionsError,
-  } = useGetStripeTransactionsQuery();
 
   // Combined loading state
-  const isLoading = purchasesLoading || countLoading || balanceLoading || transactionsLoading;
-  const isError = purchasesError || countError || balanceError || transactionsError;
+  const isLoading = purchasesLoading || countLoading || balanceLoading;
+  const isError = purchasesError || countError || balanceError;
 
   // Data preparation
   const purchasedCourses = purchasesData?.purchasedCourse || [];
   const balance = balanceData?.balance || { available: 0, pending: 0 };
-  const transactions = transactionsData?.transactions || [];
 
   // Chart data formatting
   const courseData = purchasedCourses.map(course => ({
@@ -80,19 +64,14 @@ const Dashboard = () => {
         {/* Balance Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Stripe Balance</CardTitle>
+            <CardTitle className="text-lg">Total Balance</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="flex justify-between">
+              
+              <div className="flex justify-between text-3xl font-bold text-white-300">
                 <span>Available:</span>
-                <span className="font-semibold text-green-600">
-                  ${balance.available.toFixed(2)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pending:</span>
-                <span className="font-semibold text-blue-600">
+                <span className="text-3xl font-bold text-blue-600">
                   ${balance.pending.toFixed(2)}
                 </span>
               </div>
@@ -112,6 +91,8 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
+        
+
         {/* Total Courses Card */}
         <Card>
           <CardHeader>
@@ -125,62 +106,7 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid gap-4 md:grid-cols-2">
-       
 
-        {/* Recent Transactions Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((tx) => (
-                  <TableRow key={tx.id}>
-                    <TableCell>
-                      {new Date(tx.created).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </TableCell>
-                    <TableCell>{tx.customer_email}</TableCell>
-                    <TableCell>{tx.payment_method}</TableCell>
-                    <TableCell>
-                      {tx.amount.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: tx.currency,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded ${
-                          tx.status === 'succeeded'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {tx.status}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
