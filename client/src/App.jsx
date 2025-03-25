@@ -16,6 +16,8 @@ import EditLecture from "./pages/admin/lecture/EditLecture";
 import CourseDetail from "./pages/student/CourseDetail";
 import CourseProgress from "./pages/student/CourseProgress";
 import SearchPage from "./pages/student/SearchPage";
+import AllUsers from "./pages/admin/user/AllUsers";
+
 import {
   AdminRoute,
   AuthenticatedUser,
@@ -97,15 +99,21 @@ const appRouter = createBrowserRouter([
             <Sidebar />
           </AdminRoute>
         ),
+        
         children: [
           {
             path: "dashboard",
             element: <Dashboard />,
           },
           {
+            path: "user",
+            element: <AllUsers/>,
+          },
+          {
             path: "course",
             element: <CourseTable />,
           },
+         
           {
             path: "course/create",
             element: <AddCourse />,

@@ -13,6 +13,14 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    dob: {
+        type: Date,
+        required: true
+    },
+    path: { 
+        type: String, 
+        enum: ["web-developer", "software-engineer", "graphic-designer", "system-engineer"],
+        required: true },
     role:{
         type:String,
         enum:["instructor", "student"],
@@ -27,7 +35,20 @@ const userSchema = new mongoose.Schema({
     photoUrl:{
         type:String,
         default:""
+    },
+
+    lastLogin: {
+        type: Date, 
+        default: null  // Track last login
     }
 },{timestamps:true});
+
+// Pre-save hook to update lastLogin on login
+userSchema.pre('save', function(next) {
+    if (this.isModified('password')) {
+      this.lastLogin = new Date(); // Automatically set lastLogin when user data is updated
+    }
+    next();
+  });
 
 export const User = mongoose.model("User", userSchema);

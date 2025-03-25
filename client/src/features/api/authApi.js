@@ -66,13 +66,38 @@ export const authApi = createApi({
                 body:formData,
                 credentials:"include"
             })
+        }),
+        deleteUser: builder.mutation({
+            query: () => ({
+                url: "delete-profile",
+                method: "DELETE",
+                credentials: "include"
+            }),
+            async onQueryStarted(_, { queryFulfilled, dispatch }) {
+                try {
+                    await queryFulfilled;
+                    dispatch(userLoggedOut()); // Clear user data after deletion
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }),
+        //all users detais get
+    getAllUsers: builder.query({
+        query: () => ({
+            url: "all-users",
+            method: "GET"
         })
     })
+    }),
+
 });
 export const {
     useRegisterUserMutation,
     useLoginUserMutation,
     useLogoutUserMutation,
     useLoadUserQuery,
-    useUpdateUserMutation
+    useUpdateUserMutation,
+    useDeleteUserMutation,
+    useGetAllUsersQuery,
 } = authApi;

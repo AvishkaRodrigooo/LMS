@@ -58,6 +58,14 @@ const Login = () => {
   };
 
   const handleRegistration = async (type) => {
+
+    if (type === "signup") {
+      if (signupInput.password !== signupInput.confirmPassword) {
+        toast.error("Passwords do not match.");
+        return;
+      }
+    }
+
     const inputData = type === "signup" ? signupInput : loginInput;
     const action = type === "signup" ? registerUser : loginUser;
     await action(inputData);
@@ -100,9 +108,7 @@ const Login = () => {
           <Card>
             <CardHeader>
               <CardTitle>Signup</CardTitle>
-              <CardDescription>
-                Create a new account and click signup when you're done.
-              </CardDescription>
+             
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="space-y-1">
@@ -127,6 +133,7 @@ const Login = () => {
                   required="true"
                 />
               </div>
+              
               <div className="space-y-1">
                 <Label htmlFor="username">Password</Label>
                 <Input
@@ -137,6 +144,48 @@ const Login = () => {
                   placeholder="Eg. xyz"
                   required="true"
                 />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="confirm-password">Confirm password</Label>
+                <Input
+                  type="password"
+                  name="confirmPassword"
+                  value={signupInput.confirmPassword}
+                  onChange={(e) => changeInputHandler(e, "signup")}
+                  placeholder="Confirm password"
+                  required="true"
+                  className={`border ${signupInput.password && signupInput.confirmPassword && signupInput.password !== signupInput.confirmPassword 
+                    ? 'border-red-500' 
+                    : 'border-gray-300'}`}
+                />
+              </div>
+              <Label htmlFor="dob">Date of Birth</Label>
+      <Input
+        type="text"
+        name="dob"
+        value={signupInput.dob}
+        onFocus={(e) => (e.target.type = 'date')}
+        onBlur={(e) => (e.target.type = 'text')}
+        onChange={(e) => changeInputHandler(e, "signup")}
+        placeholder="Select Date of Birth"
+        required
+      />
+       <div className="space-y-1">
+                <Label htmlFor="path">Path</Label>
+                <select 
+                  name="path"
+                  value={signupInput.role}
+                  onChange={(e) => changeInputHandler(e, "signup")}
+                  className="w-full p-2 border rounded"
+                  style={{ backgroundColor: "#070717", color: "white", border: "1px solid #161f33" }} 
+                  required
+                >
+                  <option value="">Select Role</option>
+                  <option value="web-developer">Web Developer</option>
+                  <option value="software-engineer">Software Engineer</option>
+                  <option value="graphic-designer">Graphic Designer</option>
+                  <option value="system-engineer">System Engineer</option>
+                </select>
               </div>
             </CardContent>
             <CardFooter>

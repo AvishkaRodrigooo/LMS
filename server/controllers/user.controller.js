@@ -6,8 +6,8 @@ import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.js";
 export const register = async (req,res) => {
     try {
        
-        const {name, email, password} = req.body; // patel214
-        if(!name || !email || !password){
+        const {name, email, password,dob ,path} = req.body; // patel214
+        if(!name || !email || !password || !dob || !path){
             return res.status(400).json({
                 success:false,
                 message:"All fields are required."
@@ -24,7 +24,9 @@ export const register = async (req,res) => {
         await User.create({
             name,
             email,
-            password:hashedPassword
+            password:hashedPassword,
+            dob,
+            path,
         });
         return res.status(201).json({
             success:true,
@@ -62,6 +64,14 @@ export const login = async (req,res) => {
                 message:"Incorrect email or password"
             });
         }
+
+        //last login time
+        // Directly update the lastLogin field without saving the entire user document
+    user.lastLogin = new Date();
+
+    // Only update the lastLogin field in the database
+    await User.updateOne({ _id: user._id }, { lastLogin: user.lastLogin });
+        ////
         generateToken(res, user, `Welcome back ${user.name}`);
 
     } catch (error) {
@@ -111,7 +121,7 @@ export const getUserProfile = async (req,res) => {
 export const updateProfile = async (req,res) => {
     try {
         const userId = req.id;
-        const {name} = req.body;
+        const {name,dob,path} = req.body;
         const profilePhoto = req.file;
 
         const user = await User.findById(userId);
@@ -131,7 +141,7 @@ export const updateProfile = async (req,res) => {
         const cloudResponse = await uploadMedia(profilePhoto.path);
         const photoUrl = cloudResponse.secure_url;
 
-        const updatedData = {name, photoUrl};
+        const updatedData = {name, photoUrl,dob,path};
         const updatedUser = await User.findByIdAndUpdate(userId, updatedData, {new:true}).select("-password");
 
         return res.status(200).json({
@@ -148,3 +158,54 @@ export const updateProfile = async (req,res) => {
         })
     }
 }
+export const deleteProfile = async (req, res) => {
+    try {
+        const userId = req.id; // Ensure userId is extracted correctly
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // Delete profile photo from Cloudinary if it exists
+        if (user.photoUrl) {
+            const publicId = user.photoUrl.split("/").pop().split(".")[0]; // Extract public ID
+            await deleteMediaFromCloudinary(publicId);
+        }
+
+        // Delete user from the database
+        await User.findByIdAndDelete(userId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Account deleted successfully"
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to deleteeeee account"
+        });
+    }
+};
+
+
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find().select("name email dob path photoUrl lastLogin");
+
+        return res.status(200).json({
+            success: true,
+            users
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch users"
+        });
+    }
+};
