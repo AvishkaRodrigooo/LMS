@@ -82,7 +82,8 @@ const Dashboard = () => {
         {/* Successful Payments Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Successful Payments</CardTitle>
+            <CardTitle className="text-lg">Total Transactions
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">

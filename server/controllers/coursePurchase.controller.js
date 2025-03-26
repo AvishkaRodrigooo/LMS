@@ -182,7 +182,7 @@ export const getAllPurchasedCourse = async (_, res) => {
 
 export const getSuccessfulPaymentCount = async (_, res) => {
   try {
-    const count = await CoursePurchase.countDocuments({ status: "completed" });
+    const count = await CoursePurchase.countDocuments({ status: "pending" });
     return res.status(200).json({ count });
   } catch (error) {
     console.log(error);
@@ -216,27 +216,41 @@ export const getStripeBalance = async (_, res) => {
 
 export const getStripeTransactions = async (_, res) => {
   try {
-    const transactions = await stripe.paymentIntents.list({
+    const sessions = await stripe.checkout.sessions.list({
       limit: 10,
-      expand: ['data.customer', 'data.payment_method']
+      expand: ["data.payment_intent.payment_method"]
     });
 
-    const formattedTransactions = transactions.data.map(tx => ({
-      id: tx.id,
-      amount: tx.amount / 100,
-      currency: tx.currency.toUpperCase(),
-      created: new Date(tx.created * 1000),
-      customer_email: tx.customer?.email || 'No email', // Ensure this line exists
-      payment_method: tx.payment_method?.card 
-        ? `${tx.payment_method.card.brand} ****${tx.payment_method.card.last4}`
-        : 'Unknown method',
-      status: tx.status
+    const transactions = await Promise.all(sessions.data.map(async (session) => {
+      const user = await User.findById(session.metadata.userId);
+      const paymentMethod = session.payment_intent?.payment_method;
+      
+      // Format payment method details
+      const paymentMethodDisplay = paymentMethod?.card 
+        ? `${paymentMethod.card.brand} ****${paymentMethod.card.last4}`
+        : 'Unknown method';
+
+      return {
+        id: session.id,
+        amount: session.amount_total / 100,
+        currency: session.currency.toUpperCase(),
+        created: new Date(session.created * 1000),
+        userIdentifier: session.metadata.userIdentifier,
+        userDetails: {
+          id: session.metadata.userId,
+          username: user?.username || "Unknown",
+          accountCreated: user?.createdAt || null
+        },
+        payment_method: paymentMethodDisplay,
+        status: session.payment_status,
+      };
     }));
 
-    res.status(200).json({ transactions: formattedTransactions });
+    res.status(200).json({ success: true, transactions });
+
   } catch (error) {
-    console.error('Transaction error:', error);
-    res.status(500).json({ message: 'Error fetching transactions' });
+    console.error("Transaction error:", error);
+    res.status(500).json({ success: false, message: "Error fetching transactions" });
   }
 };
 

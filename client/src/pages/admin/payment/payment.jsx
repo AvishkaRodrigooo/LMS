@@ -31,14 +31,14 @@ const Payment = () => {
     doc.text("Payment Transactions", 14, 10);
     autoTable(doc, {
       startY: 20,
-      head: [["Date", "Customer", "Method", "Amount", "Status"]],
+      head: [["Date", "User ID", "Method", "Amount", "Status"]],
       body: transactions.map((tx) => [
         new Date(tx.created).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
         }),
-        tx.customer_email,
+        tx.userIdentifier,
         tx.payment_method,
         tx.amount.toLocaleString("en-US", {
           style: "currency",
@@ -62,30 +62,28 @@ const Payment = () => {
           <CardTitle className="text-xl font-semibold text-gray-800 dark:text-gray-200">
             Payment Transactions
           </CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-end mb-4">
           <button 
             onClick={exportPDF} 
-            className="flex items-center gap-5 px-3 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
           >
             <Download size={16} />
             Export
           </button>
         </div>
-        <div className="overflow-x-auto">
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto mt-4">
           <Table className="min-w-[800px]">
             <TableHeader className="bg-gray-100 dark:bg-gray-700">
-              <TableRow>
+              <TableRow className="overflow-x-auto mt-4">
                 <TableHead className="w-[150px] font-medium text-gray-600 dark:text-gray-300">
                   Date
                 </TableHead>
                 <TableHead className="font-medium text-gray-600 dark:text-gray-300">
-                  Customer
+                  User Identifier
                 </TableHead>
                 <TableHead className="font-medium text-gray-600 dark:text-gray-300">
-                  Method
+                  Payment Method
                 </TableHead>
                 <TableHead className="text-right font-medium text-gray-600 dark:text-gray-300">
                   Amount
@@ -109,7 +107,12 @@ const Payment = () => {
                     })}
                   </TableCell>
                   <TableCell className="text-gray-600 dark:text-gray-300">
-                    {tx.customer_email}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{tx.userIdentifier}</span>
+                      <span className="text-xs text-gray-400">
+                        ID: {tx.userDetails?.id || 'N/A'}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100">
@@ -127,7 +130,7 @@ const Payment = () => {
                   <TableCell>
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        tx.status === "succeeded"
+                        tx.status === "paid" // Changed from 'succeeded' to 'paid'
                           ? "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200"
                           : "bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200"
                       }`}
