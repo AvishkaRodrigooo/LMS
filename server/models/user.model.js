@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
     },
     path: { 
         type: String, 
-        enum: ["web-developer", "software-engineer", "graphic-designer", "system-engineer"],
+        enum: ["Web Developeing", "Software Engineering", "graphic-designing", "Data science","Network Engineering","Cybersecurity","Business Analyst","Mobile Application Developing"],
         required: true },
     role:{
         type:String,

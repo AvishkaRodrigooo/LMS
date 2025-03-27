@@ -158,26 +158,52 @@ export const updateProfile = async (req,res) => {
         })
     }
 }
+///
+// controllers/user.controller.js
 export const deleteProfile = async (req, res) => {
     try {
-        const userId = req.id; // Ensure userId is extracted correctly
-        const user = await User.findById(userId);
+        const { userId } = req.params;
+        const currentUserId = req.id;
 
-        if (!user) {
+        // Get current user
+        const currentUser = await User.findById(currentUserId);
+        if (!currentUser) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: "Current user not found"
             });
         }
 
-        // Delete profile photo from Cloudinary if it exists
-        if (user.photoUrl) {
-            const publicId = user.photoUrl.split("/").pop().split(".")[0]; // Extract public ID
+        // Determine which user to delete
+        let userToDelete;
+        if (userId) {
+            // Instructor deleting another user
+            if (currentUser.role !== "instructor") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Unauthorized - Instructor access required"
+                });
+            }
+            userToDelete = await User.findById(userId);
+        } else {
+            // User deleting themselves
+            userToDelete = currentUser;
+        }
+
+        if (!userToDelete) {
+            return res.status(404).json({
+                success: false,
+                message: "User to delete not found"
+            });
+        }
+
+        // Delete profile photo if exists
+        if (userToDelete.photoUrl) {
+            const publicId = userToDelete.photoUrl.split("/").pop().split(".")[0];
             await deleteMediaFromCloudinary(publicId);
         }
 
-        // Delete user from the database
-        await User.findByIdAndDelete(userId);
+        await User.findByIdAndDelete(userToDelete._id);
 
         return res.status(200).json({
             success: true,
@@ -187,11 +213,11 @@ export const deleteProfile = async (req, res) => {
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: "Failed to deleteeeee account"
+            message: "Failed to delete account"
         });
     }
 };
-
+////
 
 export const getAllUsers = async (req, res) => {
     try {
@@ -209,3 +235,4 @@ export const getAllUsers = async (req, res) => {
         });
     }
 };
+////

@@ -10,6 +10,7 @@ import {
   useGetSuccessfulPaymentCountQuery,
   useGetStripeBalanceQuery,
 } from "@/features/api/purchaseApi";
+import { useGetAllUsersQuery } from "@/features/api/authApi";
 import {
   LineChart,
   Line,
@@ -19,6 +20,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import AllUsers from './user/AllUsers';
 
 const Dashboard = () => {
   // Fetch all data
@@ -40,6 +42,14 @@ const Dashboard = () => {
     error: balanceError,
   } = useGetStripeBalanceQuery();
 
+  // Add users query
+  const {
+    data: usersData,
+    isLoading: usersLoading,
+    error: usersError,
+  } = useGetAllUsersQuery();
+
+
   // Combined loading state
   const isLoading = purchasesLoading || countLoading || balanceLoading;
   const isError = purchasesError || countError || balanceError;
@@ -47,6 +57,9 @@ const Dashboard = () => {
   // Data preparation
   const purchasedCourses = purchasesData?.purchasedCourse || [];
   const balance = balanceData?.balance || { available: 0, pending: 0 };
+
+  //all users
+  const totalUsers = usersData?.users?.length || 0;
 
   // Chart data formatting
   const courseData = purchasedCourses.map(course => ({
@@ -105,6 +118,18 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+{/* Total Of Users */}
+<Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Total Users</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-600">
+            {totalUsers}
+            </div>
+          </CardContent>
+        </Card>
+        
       </div>
 
 
