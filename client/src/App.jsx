@@ -18,6 +18,9 @@ import CourseProgress from "./pages/student/CourseProgress";
 import SearchPage from "./pages/student/SearchPage";
 import AllUsers from "./pages/admin/user/AllUsers";
 import Payment from './pages/admin/payment/payment';
+import Cart from "./components/Cart";
+import Checkout from "./components/Checkout"; // Import the new Checkout component
+
 import {
   AdminRoute,
   AuthenticatedUser,
@@ -85,12 +88,27 @@ const appRouter = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PurchaseCourseProtectedRoute>
-            <CourseProgress />
+              <CourseProgress />
             </PurchaseCourseProtectedRoute>
           </ProtectedRoute>
         ),
       },
-
+      {
+        path: "cart",
+        element: (
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "checkout", // Add new checkout route
+        element: (
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        ),
+      },
       // admin routes start from here
       {
         path: "admin",
@@ -144,7 +162,7 @@ function App() {
   return (
     <main>
       <ThemeProvider>
-      <RouterProvider router={appRouter} />
+        <RouterProvider router={appRouter} />
       </ThemeProvider>
     </main>
   );
