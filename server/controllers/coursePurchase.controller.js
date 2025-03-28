@@ -179,66 +179,99 @@ export const getAllPurchasedCourse = async (_, res) => {
 };
 
 
-export const getTotalRevenue = async (req, res) => {
+
+export const getSuccessfulPaymentCount = async (_, res) => {
   try {
-    const currentYear = new Date().getFullYear();
-    
-    const revenueData = await CoursePurchase.aggregate([
-      { 
-        $match: { 
-          status: "completed",
-          createdAt: { 
-            $gte: new Date(`${currentYear}-01-01`),
-            $lte: new Date(`${currentYear}-12-31`)
-          }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" },
-          totalSales: { $sum: 1 }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          totalRevenue: 1,
-          totalSales: 1
-        }
-      }
-    ]);
-
-    const result = revenueData[0] || { totalRevenue: 0, totalSales: 0 };
-
-    res.status(200).json({
-      success: true,
-      revenue: result.totalRevenue,
-      transactions: result.totalSales
-    });
-
+    const count = await CoursePurchase.countDocuments({ status: "pending" });
+    return res.status(200).json({ count });
   } catch (error) {
-    console.error("Revenue calculation error:", error);
-    res.status(500).json({ 
-      success: false, 
-      message: "収益データの取得に失敗しました",
-      error: error.message 
-    });
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const getAllPayouts = async (req, res) => {
+// Backend: payment.controller.js (add this endpoint)
+export const getStripeBalance = async (_, res) => {
   try {
-    const payouts = await stripe.payouts.list({
-      limit: 100, // Adjust as needed
-    });
+    const balance = await stripe.balance.retrieve();
+    
+    // Find USD balance
+    const usdBalance = {
+      available: balance.available.find(b => b.currency === 'usd')?.amount || 0,
+      pending: balance.pending.find(b => b.currency === 'usd')?.amount || 0
+    };
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      payouts: payouts.data,
+      balance: {
+        available: usdBalance.available / 100, // Convert cents to dollars
+        pending: usdBalance.pending / 100
+      }
     });
   } catch (error) {
-    console.error("Error fetching payouts:", error);
-    res.status(500).json({ success: false, message: "Failed to get payouts" });
+    console.error('Balance error:', error);
+    res.status(500).json({ success: false, message: 'Error fetching balance' });
+  }
+};
+
+export const getStripeTransactions = async (_, res) => {
+  try {
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 10,
+      expand: ["data.payment_intent.payment_method"]
+    });
+
+    const transactions = await Promise.all(sessions.data.map(async (session) => {
+      const user = await User.findById(session.metadata.userId);
+      const paymentMethod = session.payment_intent?.payment_method;
+      
+      // Format payment method details
+      const paymentMethodDisplay = paymentMethod?.card 
+        ? `${paymentMethod.card.brand} ****${paymentMethod.card.last4}`
+        : 'Unknown method';
+
+      return {
+        id: session.id,
+        amount: session.amount_total / 100,
+        currency: session.currency.toUpperCase(),
+        created: new Date(session.created * 1000),
+        userIdentifier: session.metadata.userIdentifier,
+        userDetails: {
+          id: session.metadata.userId,
+          username: user?.username || "Unknown",
+          accountCreated: user?.createdAt || null
+        },
+        payment_method: paymentMethodDisplay,
+        status: session.payment_status,
+      };
+    }));
+
+    res.status(200).json({ success: true, transactions });
+
+  } catch (error) {
+    console.error("Transaction error:", error);
+    res.status(500).json({ success: false, message: "Error fetching transactions" });
+  }
+};
+
+export const getTotalTransactionCount = async (_, res) => {
+  try {
+    // Get count from Stripe
+    const transactions = await stripe.paymentIntents.list({
+      limit: 1 // Minimal limit since we only need the count
+    });
+    
+    // Return total count from Stripe
+    return res.status(200).json({ 
+      success: true,
+      count: transactions.data.length,
+      totalCount: transactions.has_more ? '100+' : transactions.data.length // Estimated count
+    });
+  } catch (error) {
+    console.error('Transaction count error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching transaction count' 
+    });
   }
 };

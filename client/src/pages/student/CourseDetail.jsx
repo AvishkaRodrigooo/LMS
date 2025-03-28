@@ -1,5 +1,6 @@
 import BuyCourseButton from "@/components/BuyCourseButton";
 import { Button } from "@/components/ui/button";
+import AddToCartButton from "@/components/AddToCartButton";
 import {
   Card,
   CardContent,
@@ -98,7 +99,14 @@ const CourseDetail = () => {
               {purchased ? (
                 <Button onClick={handleContinueCourse} className="w-full">Continue Course</Button>
               ) : (
-                <BuyCourseButton courseId={courseId} />
+                <div className="w-full flex flex-col gap-2">
+                  <BuyCourseButton courseId={courseId} className="w-full" />
+                  <AddToCartButton 
+                    courseId={courseId}
+                    variant="outline"
+                    className="w-full"
+                  />
+                </div>
               )}
             </CardFooter>
           </Card>

@@ -219,10 +219,14 @@ const Profile = () => {
                       <SelectValue placeholder="Select your path" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="frontend">Frontend Development</SelectItem>
-                      <SelectItem value="backend">Backend Development</SelectItem>
-                      <SelectItem value="fullstack">Full Stack Development</SelectItem>
-                      <SelectItem value="uiux">UI/UX Design</SelectItem>
+                      <SelectItem value="Web Development">Web Development</SelectItem>
+                      <SelectItem value="Software Engineering">Software Engineering</SelectItem>
+                      <SelectItem value="Graphic Designing">Graphic Designing</SelectItem>
+                      <SelectItem value="Data Science">Data Science</SelectItem>
+                      <SelectItem value="Network Engineering">Network Engineering</SelectItem>
+                      <SelectItem value="Cybersecurity">Cybersecurity</SelectItem>
+                      <SelectItem value="Business Analyst">Business Analyst</SelectItem>
+                      <SelectItem value="Mobile Application Development">Mobile Application Development</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

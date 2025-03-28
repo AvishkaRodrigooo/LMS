@@ -1,77 +1,138 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useGetPurchasedCoursesQuery } from "@/features/api/purchaseApi";
-import React from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  useGetPurchasedCoursesQuery,
+  useGetSuccessfulPaymentCountQuery,
+  useGetStripeBalanceQuery,
+} from "@/features/api/purchaseApi";
+import { useGetAllUsersQuery } from "@/features/api/authApi";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import AllUsers from './user/AllUsers';
 
 const Dashboard = () => {
+  // Fetch all data
+  const {
+    data: purchasesData,
+    isLoading: purchasesLoading,
+    error: purchasesError,
+  } = useGetPurchasedCoursesQuery();
+  
+  const {
+    data: countData,
+    isLoading: countLoading,
+    error: countError,
+  } = useGetSuccessfulPaymentCountQuery();
+  
+  const {
+    data: balanceData,
+    isLoading: balanceLoading,
+    error: balanceError,
+  } = useGetStripeBalanceQuery();
 
-  const {data, isSuccess, isError, isLoading} = useGetPurchasedCoursesQuery();
+  // Add users query
+  const {
+    data: usersData,
+    isLoading: usersLoading,
+    error: usersError,
+  } = useGetAllUsersQuery();
 
-  if(isLoading) return <h1>Loading...</h1>
-  if(isError) return <h1 className="text-red-500">Failed to get purchased course</h1>
 
-  //
-  const {purchasedCourse} = data || [];
+  // Combined loading state
+  const isLoading = purchasesLoading || countLoading || balanceLoading;
+  const isError = purchasesError || countError || balanceError;
 
-  const courseData = purchasedCourse.map((course)=> ({
-    name:course.courseId.courseTitle,
-    price:course.courseId.coursePrice
-  }))
+  // Data preparation
+  const purchasedCourses = purchasesData?.purchasedCourse || [];
+  const balance = balanceData?.balance || { available: 0, pending: 0 };
 
-  const totalRevenue = purchasedCourse.reduce((acc,element) => acc+(element.amount || 0), 0);
+  //all users
+  const totalUsers = usersData?.users?.length || 0;
 
-  const totalSales = purchasedCourse.length;
+  // Chart data formatting
+  const courseData = purchasedCourses.map(course => ({
+    name: course.courseId?.courseTitle?.substring(0, 15) + '...' || 'Course',
+    price: course.courseId?.coursePrice || 0,
+  }));
+
+  if (isLoading) return <div className="p-4 text-center">Loading Dashboard...</div>;
+  if (isError) return <div className="p-4 text-red-500">Error loading dashboard data</div>;
+
   return (
-    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ">
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle>Total Sales</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold text-blue-600">{totalSales}</p>
-        </CardContent>
-      </Card>
+    <div className="space-y-6 p-4">
+      {/* Top Cards Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Balance Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Total Balance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              
+              <div className="flex justify-between text-3xl font-bold text-white-300">
+                <span>Available:</span>
+                <span className="text-3xl font-bold text-blue-600">
+                  ${balance.pending.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle>Total Revenue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-3xl font-bold text-blue-600">{totalRevenue}</p>
-        </CardContent>
-      </Card>
+        {/* Successful Payments Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Total Transactions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-600">
+              {countData?.count || 0}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Course Prices Card */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-700">
-            Course Prices
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={courseData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-              <XAxis
-                dataKey="name"
-                stroke="#6b7280"
-                angle={-30} // Rotated labels for better visibility
-                textAnchor="end"
-                interval={0} // Display all labels
-              />
-              <YAxis stroke="#6b7280" />
-              <Tooltip formatter={(value, name) => [`₹${value}`, name]} />
-              <Line
-                type="monotone"
-                dataKey="price"
-                stroke="#4a90e2" // Changed color to a different shade of blue
-                strokeWidth={3}
-                dot={{ stroke: "#4a90e2", strokeWidth: 2 }} // Same color for the dot
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        
+
+        {/* Total Courses Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Total Courses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-600">
+              {purchasedCourses.length}
+            </div>
+          </CardContent>
+        </Card>
+{/* Total Of Users */}
+<Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Total Users</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-purple-600">
+            {totalUsers}
+            </div>
+          </CardContent>
+        </Card>
+        
+      </div>
+
+
     </div>
   );
 };

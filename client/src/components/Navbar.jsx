@@ -25,37 +25,61 @@ import { Separator } from "@radix-ui/react-dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
 import { useLogoutUserMutation } from "@/features/api/authApi";
 import { toast } from "sonner";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { FaShoppingCart } from "react-icons/fa";
+import { Badge } from "./ui/badge";
+import { clearCart } from "@/features/cartSlice";
 
 const Navbar = () => {
+  const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth);
+  const cartCount = useSelector((store) => store.cart?.items?.length || 0);
   const [logoutUser, { data, isSuccess }] = useLogoutUserMutation();
   const navigate = useNavigate();
+
   const logoutHandler = async () => {
-    await logoutUser();
+    try {
+      await logoutUser().unwrap();
+      dispatch(clearCart());
+    } catch (error) {
+      toast.error("Logout failed");
+    }
   };
 
   useEffect(() => {
     if (isSuccess) {
-      toast.success(data?.message || "User log out.");
+      toast.success(data?.message || "Logged out successfully");
       navigate("/login");
     }
-  }, [isSuccess]);
+  }, [isSuccess, navigate, data]);
 
   return (
     <div className="h-16 dark:bg-[#020817] bg-white border-b dark:border-b-gray-800 border-b-gray-200 fixed top-0 left-0 right-0 duration-300 z-10">
       {/* Desktop */}
       <div className="max-w-7xl mx-auto hidden md:flex justify-between items-center gap-10 h-full">
         <div className="flex items-center gap-2">
-          <School size={"30"} />
+          <School size={30} />
           <Link to="/">
             <h1 className="hidden md:block font-extrabold text-2xl">
               Learnplus
             </h1>
           </Link>
         </div>
-        {/* User icons and dark mode icon  */}
+
         <div className="flex items-center gap-8">
+          {user && (
+            <Link to="/cart" className="relative">
+              <Button variant="ghost" size="icon">
+                <FaShoppingCart className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 px-2 py-1 rounded-full">
+                    {cartCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          )}
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -71,12 +95,11 @@ const Navbar = () => {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem>
-                    <Link to="my-learning">My learning</Link>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-learning">My learning</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    {" "}
-                    <Link to="profile">Edit Profile</Link>{" "}
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">Edit Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={logoutHandler}>
                     Log out
@@ -85,7 +108,9 @@ const Navbar = () => {
                 {user?.role === "instructor" && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem><Link to="/admin/dashboard">Dashboard</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard">Dashboard</Link>
+                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
@@ -95,26 +120,25 @@ const Navbar = () => {
               <Button variant="outline" onClick={() => navigate("/login")}>
                 Login
               </Button>
-              <Button onClick={() => navigate("/login")}>Signup</Button>
+              <Button onClick={() => navigate("/signup")}>Signup</Button>
             </div>
           )}
           <DarkMode />
         </div>
       </div>
-      {/* Mobile device  */}
+
+      {/* Mobile device */}
       <div className="flex md:hidden items-center justify-between px-4 h-full">
-        <h1 className="font-extrabold text-2xl">E-learning</h1>
-        <MobileNavbar user={user}/>
+        <h1 className="font-extrabold text-2xl">Learnplus</h1>
+        <MobileNavbar user={user} cartCount={cartCount} logoutHandler={logoutHandler} />
       </div>
     </div>
   );
 };
 
-export default Navbar;
-
-const MobileNavbar = ({user}) => {
+const MobileNavbar = ({ user, cartCount, logoutHandler }) => {
   const navigate = useNavigate();
-  
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -128,19 +152,36 @@ const MobileNavbar = ({user}) => {
       </SheetTrigger>
       <SheetContent className="flex flex-col">
         <SheetHeader className="flex flex-row items-center justify-between mt-2">
-          <SheetTitle> <Link to="/">E-Learning</Link></SheetTitle>
+          <SheetTitle><Link to="/">Learnplus</Link></SheetTitle>
           <DarkMode />
         </SheetHeader>
         <Separator className="mr-2" />
         <nav className="flex flex-col space-y-4">
-          <Link to="/my-learning">My Learning</Link>
-          <Link to="/profile">Edit Profile</Link>
-          <p>Log out</p>
+          {user && (
+            <>
+              <Link to="/my-learning">My Learning</Link>
+              <Link to="/profile">Edit Profile</Link>
+              <Link to="/cart" className="flex items-center gap-2">
+                <FaShoppingCart className="h-4 w-4" />
+                Cart {cartCount > 0 && `(${cartCount})`}
+              </Link>
+            </>
+          )}
+          {user ? (
+            <button onClick={logoutHandler}>Log out</button>
+          ) : (
+            <>
+              <button onClick={() => navigate("/login")}>Login</button>
+              <button onClick={() => navigate("/signup")}>Signup</button>
+            </>
+          )}
         </nav>
         {user?.role === "instructor" && (
           <SheetFooter>
             <SheetClose asChild>
-              <Button type="submit" onClick={()=> navigate("/admin/dashboard")}>Dashboard</Button>
+              <Button onClick={() => navigate("/admin/dashboard")}>
+                Dashboard
+              </Button>
             </SheetClose>
           </SheetFooter>
         )}
@@ -148,3 +189,5 @@ const MobileNavbar = ({user}) => {
     </Sheet>
   );
 };
+
+export default Navbar;

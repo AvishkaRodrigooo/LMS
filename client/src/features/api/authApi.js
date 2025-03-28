@@ -82,13 +82,34 @@ export const authApi = createApi({
                 }
             }
         }),
+        
         //all users detais get
     getAllUsers: builder.query({
         query: () => ({
             url: "all-users",
             method: "GET"
         })
-    })
+    }),
+    ///delete
+    deleteUser: builder.mutation({
+        query: (userId) => ({
+          url: userId ? `delete-user/${userId}` : "delete-profile",
+          method: "DELETE",
+          credentials: "include"
+        }),
+        async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+          try {
+           await queryFulfilled;
+            // Only logout if it's self-deletion
+            if (!arg) {
+              dispatch(userLoggedOut());
+            }
+            
+          } catch (error) {
+            console.error("Delete error:", error); 
+          }
+        }
+      }),
     }),
 
 });
@@ -100,4 +121,5 @@ export const {
     useUpdateUserMutation,
     useDeleteUserMutation,
     useGetAllUsersQuery,
+    
 } = authApi;
