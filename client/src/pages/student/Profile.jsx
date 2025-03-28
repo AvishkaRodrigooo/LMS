@@ -166,7 +166,7 @@ const Profile = () => {
           </div>
           <div className="mb-2">
             <h1 className="font-semibold text-gray-900 dark:text-gray-100 ">
-              My path:
+              My Role:
               <span className="font-normal text-gray-700 dark:text-gray-300 ml-2">
                 {user.path}
               </span>
@@ -181,6 +181,9 @@ const Profile = () => {
 
               <Button size="sm" className="mt-2 ml-4" onClick={handleDeleteAccount}>
                 Delete My Account
+              </Button>
+              <Button size="sm" className="mt-2 ml-4" >
+                Change Password
               </Button>
            
             <DialogContent>
@@ -219,14 +222,14 @@ const Profile = () => {
                       <SelectValue placeholder="Select your path" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Web Development">Web Development</SelectItem>
+                      <SelectItem value="Web Developeing">Web Developeing</SelectItem>
                       <SelectItem value="Software Engineering">Software Engineering</SelectItem>
-                      <SelectItem value="Graphic Designing">Graphic Designing</SelectItem>
-                      <SelectItem value="Data Science">Data Science</SelectItem>
+                      <SelectItem value="graphic-designing">Graphic Designing</SelectItem>
+                      <SelectItem value="Data science">Data Science</SelectItem>
                       <SelectItem value="Network Engineering">Network Engineering</SelectItem>
                       <SelectItem value="Cybersecurity">Cybersecurity</SelectItem>
                       <SelectItem value="Business Analyst">Business Analyst</SelectItem>
-                      <SelectItem value="Mobile Application Development">Mobile Application Development</SelectItem>
+                      <SelectItem value="Mobile Application Developing">Mobile Application Developing</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
