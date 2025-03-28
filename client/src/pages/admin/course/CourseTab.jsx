@@ -207,6 +207,7 @@ const CourseTab = () => {
                     <SelectItem value="Docker">Docker</SelectItem>
                     <SelectItem value="MongoDB">MongoDB</SelectItem>
                     <SelectItem value="HTML">HTML</SelectItem>
+                    <SelectItem value="CyberSecurity">CyberSecurity</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
