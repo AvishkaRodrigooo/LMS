@@ -12,8 +12,12 @@
   "description": "",
   "dependencies": {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     "@stripe/react-stripe-js": "^3.5.1",
     "@stripe/stripe-js": "^6.1.0",
+=======
+    "@react-pdf/renderer": "^4.3.0",
+>>>>>>> Stashed changes
 =======
     "@react-pdf/renderer": "^4.3.0",
 >>>>>>> Stashed changes

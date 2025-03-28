@@ -22,7 +22,11 @@
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.1",
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     "@react-icons/all-files": "^4.1.0",
+=======
+    "@react-pdf/renderer": "^4.3.0",
+>>>>>>> Stashed changes
 =======
     "@react-pdf/renderer": "^4.3.0",
 >>>>>>> Stashed changes
