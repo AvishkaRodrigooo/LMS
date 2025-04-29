@@ -222,43 +222,103 @@ export const getCourseLecture = async (req,res) => {
         })
     }
 }
-export const editLecture = async (req,res) => {
+
+export const editLecture = async (req, res) => {
     try {
-        const {lectureTitle, videoInfo, isPreviewFree} = req.body;
-        
-        const {courseId, lectureId} = req.params;
+        const { lectureTitle, isPreviewFree } = req.body;
+        const videoFile = req.file; // Uploaded video file
+        console.log("Request Body:", req.body);
+        console.log("Uploaded File:", videoFile);
+
+        const { courseId, lectureId } = req.params;
         const lecture = await Lecture.findById(lectureId);
-        if(!lecture){
-            return res.status(404).json({
-                message:"Lecture not found!"
-            })
+        if (!lecture) {
+            return res.status(404).json({ message: "Lecture not found!" });
         }
 
-        // update lecture
-        if(lectureTitle) lecture.lectureTitle = lectureTitle;
-        if(videoInfo?.videoUrl) lecture.videoUrl = videoInfo.videoUrl;
-        if(videoInfo?.publicId) lecture.publicId = videoInfo.publicId;
-        lecture.isPreviewFree = isPreviewFree;
+        // Handle video upload to Cloudinary if a file is provided
+        let videoInfo = {};
+        if (videoFile) {
+            // Delete old video from Cloudinary if it exists
+            if (lecture.publicId) {
+                await deleteVideoFromCloudinary(lecture.publicId);
+            }
+            // Upload new video
+            const uploadedVideo = await uploadMedia(videoFile.path); // Assuming uploadMedia works for videos
+            videoInfo = {
+                videoUrl: uploadedVideo.secure_url,
+                publicId: uploadedVideo.public_id,
+            };
+        }
+
+        // Update lecture fields
+        if (lectureTitle) lecture.lectureTitle = lectureTitle;
+        if (videoInfo.videoUrl) lecture.videoUrl = videoInfo.videoUrl;
+        if (videoInfo.publicId) lecture.publicId = videoInfo.publicId;
+        if (isPreviewFree !== undefined) {
+            lecture.isPreviewFree = isPreviewFree === "true" || Boolean(isPreviewFree);
+        }
 
         await lecture.save();
 
-        // Ensure the course still has the lecture id if it was not aleardy added;
         const course = await Course.findById(courseId);
-        if(course && !course.lectures.includes(lecture._id)){
+        if (course && !course.lectures.includes(lecture._id)) {
             course.lectures.push(lecture._id);
             await course.save();
-        };
+        }
+
         return res.status(200).json({
             lecture,
-            message:"Lecture updated successfully."
-        })
+            message: "Lecture updated successfully.",
+        });
     } catch (error) {
         console.log(error);
-        return res.status(500).json({
-            message:"Failed to edit lectures"
-        })
+        return res.status(500).json({ message: "Failed to edit lecture" });
     }
-}
+};
+
+
+// export const editLecture = async (req, res) => {
+//     try {
+//       const { lectureTitle, isPreviewFree } = req.body;
+  
+//       // Handle videoInfo from FormData
+//       const videoInfo = {
+//         videoUrl: req.body["videoInfo[videoUrl]"],
+//         publicId: req.body["videoInfo[publicId]"],
+//       };
+  
+//       const { courseId, lectureId } = req.params;
+//       const lecture = await Lecture.findById(lectureId);
+//       if (!lecture) {
+//         return res.status(404).json({ message: "Lecture not found!" });
+//       }
+  
+//       // Update lecture fields
+//       if (lectureTitle) lecture.lectureTitle = lectureTitle;
+//       if (videoInfo.videoUrl) lecture.videoUrl = videoInfo.videoUrl;
+//       if (videoInfo.publicId) lecture.publicId = videoInfo.publicId;
+//       lecture.isPreviewFree = isPreviewFree === "true" || isPreviewFree; // Handle string/boolean from FormData
+  
+//       await lecture.save();
+  
+//       // Update course lectures array if needed
+//       const course = await Course.findById(courseId);
+//       if (course && !course.lectures.includes(lecture._id)) {
+//         course.lectures.push(lecture._id);
+//         await course.save();
+//       }
+  
+//       return res.status(200).json({
+//         lecture,
+//         message: "Lecture updated successfully.",
+//       });
+//     } catch (error) {
+//       console.log(error);
+//       return res.status(500).json({ message: "Failed to edit lecture" });
+//     }
+//   };
+     
 export const removeLecture = async (req,res) => {
     try {
         const {lectureId} = req.params;
@@ -335,5 +395,45 @@ export const togglePublishCourse = async (req,res) => {
         return res.status(500).json({
             message:"Failed to update status"
         })
+    }
+}
+
+export const deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const course = await Course.findById(courseId);
+        
+        if (!course) {
+            return res.status(404).json({
+                message: "Course not found!"
+            });
+        }
+
+        // Delete associated thumbnail from Cloudinary if it exists
+        if (course.courseThumbnail) {
+            const publicId = course.courseThumbnail.split("/").pop().split(".")[0];
+            await deleteMediaFromCloudinary(publicId);
+        }
+
+        // Delete all associated lectures
+        for (const lectureId of course.lectures) {
+            const lecture = await Lecture.findById(lectureId);
+            if (lecture && lecture.publicId) {
+                await deleteVideoFromCloudinary(lecture.publicId);
+            }
+            await Lecture.findByIdAndDelete(lectureId);
+        }
+
+        // Delete the course
+        await Course.findByIdAndDelete(courseId);
+
+        return res.status(200).json({
+            message: "Course deleted successfully."
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Failed to delete course"
+        });
     }
 }

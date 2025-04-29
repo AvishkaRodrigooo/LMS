@@ -11,9 +11,20 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     "@stripe/react-stripe-js": "^3.5.1",
     "@stripe/stripe-js": "^6.1.0",
+<<<<<<< HEAD
     "bcrypt": "^5.1.1",
+=======
+=======
+    "@react-pdf/renderer": "^4.3.0",
+>>>>>>> Stashed changes
+=======
+    "@react-pdf/renderer": "^4.3.0",
+>>>>>>> Stashed changes
+>>>>>>> 60e560fc8dcaec20d77d19cfb7bdcc4abd27253a
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
     "cookie-parser": "^1.4.7",
