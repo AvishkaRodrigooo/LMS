@@ -20,7 +20,7 @@ import AllUsers from "./pages/admin/user/AllUsers";
 import Payment from './pages/admin/payment/payment';
 import Cart from "./components/Cart";
 import Checkout from "./components/Checkout"; // Import the new Checkout component
-
+import ForgotPassword from "./pages/ForgotPassword";
 import {
   AdminRoute,
   AuthenticatedUser,
@@ -57,6 +57,15 @@ const appRouter = createBrowserRouter([
           <ProtectedRoute>
             <MyLearning />
           </ProtectedRoute>
+        ),
+      },
+      // Add this new route for forgot password
+      {
+        path: "forgot-password",
+        element: (
+          <AuthenticatedUser>
+            <ForgotPassword />
+          </AuthenticatedUser>
         ),
       },
       {

@@ -8,32 +8,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetAllUsersQuery,useDeleteUserMutation } from "@/features/api/authApi";
+import { useGetAllUsersQuery, useDeleteUserMutation } from "@/features/api/authApi";
 import { Loader2, Trash } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import Swal from "sweetalert2";
 
 const AllUsers = () => {
   const { data, isLoading, isError } = useGetAllUsersQuery();
-  const [searchTerm, setSearchTerm] = useState("");//search
+  const [searchTerm, setSearchTerm] = useState("");
   const [deleteUser] = useDeleteUserMutation();
   const [pdfError, setPdfError] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const navigate = useNavigate();
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
+
   const filteredUsers = data?.users?.filter((user) => {
     const userRole = user.path || "";
     return userRole.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  const totalUsers = filteredUsers?.length || 0; // <-- Total users count
+
   const generatePDF = async (filteredUsers, searchTerm) => {
     try {
-      // Dynamic imports with proper error handling
       const { default: jsPDF } = await import("jspdf");
       const { default: autoTable } = await import("jspdf-autotable");
-      
+
       const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -54,7 +57,6 @@ const AllUsers = () => {
           : "Never logged in",
       ]);
 
-      // Add title and metadata
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
       doc.text(`User Report - ${searchTerm || "All Users"}`, 14, 15);
@@ -62,7 +64,6 @@ const AllUsers = () => {
       doc.setFontSize(10);
       doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
 
-      // Use autoTable directly
       autoTable(doc, {
         head: [["Username", "Email", "DOB", "Role", "Last Login"]],
         body: tableData,
@@ -108,6 +109,32 @@ const AllUsers = () => {
     }
   };
 
+  const handleDelete = async (userId) => {
+    setIsDeleting(true);
+    try {
+      await deleteUser(userId).unwrap();
+
+      // SweetAlert success popup
+      await Swal.fire({
+        title: "Deleted!",
+        text: "User has been deleted successfully.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK",
+        timer: 2000,
+        timerProgressBar: true,
+        position: "center",
+      });
+
+      window.location.reload();
+    } catch (error) {
+      toast.error(error.data?.message || "Failed to delete user");
+    } finally {
+      setIsDeleting(false);
+      setConfirmDeleteId(null);
+    }
+  };
+
   if (isLoading)
     return (
       <div className="p-4 flex justify-center">
@@ -118,30 +145,17 @@ const AllUsers = () => {
     return (
       <div className="p-4 text-red-500">Error loading users. Please try again.</div>
     );
-///
 
-const handleDelete = async (userId) => {
-  setIsDeleting(true);
-  try {
-    await deleteUser(userId).unwrap(); // This triggers the mutation
-    toast.success("User deleted successfully");
-    
-     // Force a refetch of the user data
-     window.location.reload();
-  } catch (error) {
-    toast.error(error.data?.message || "Failed to delete user");
-  } finally {
-    setIsDeleting(false);
-    setConfirmDeleteId(null);
-  }
-};
-
-////
   return (
     <div className="p-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold">User Management</h1>
-        
+        <div>
+          <h1 className="text-2xl font-bold">User Management</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Total Users: {totalUsers}
+          </p>
+        </div>
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
             <input
@@ -149,16 +163,13 @@ const handleDelete = async (userId) => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter by role..."
-              
-              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100  placeholder-white-900"
-              style={{
-                backgroundColor: "#0a0b1f", }}
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100 placeholder-white-900"
+              style={{ backgroundColor: "#0a0b1f" }}
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black-700 "
-                style={{}}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black-700"
               >
                 ✕
               </button>
@@ -217,39 +228,39 @@ const handleDelete = async (userId) => {
                       : "Never logged in"}
                   </TableCell>
                   <TableCell>
-                  {confirmDeleteId === user._id ? (
-                  <div className="flex gap-2">
-                    <Button
-                                   size="sm"
-                                   variant="destructive"
-                                   onClick={() => handleDelete(user._id)}
-                                   disabled={isDeleting}
-                                 >
-                                   {isDeleting ? (
-                                     <Loader2 className="animate-spin h-4 w-4" />
-                                   ) : (
-                                     "Confirm"
-                                   )}
-                                 </Button>
-                                 <Button
-                                   size="sm"
-                                   variant="outline"
-                                   onClick={() => setConfirmDeleteId(null)}
-                                   disabled={isDeleting}
-                                 >
-                                   Cancel
-                                 </Button>
-                               </div>
-                             ) : (
-                               <Button
-                                 variant="ghost"
-                                 size="icon"
-                                 onClick={() => setConfirmDeleteId(user._id)}
-                                 disabled={isLoading}
-                               >
-                                 <Trash className="h-4 w-4 text-red-500" />
-                  </Button>
-                )}
+                    {confirmDeleteId === user._id ? (
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(user._id)}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="animate-spin h-4 w-4" />
+                          ) : (
+                            "Confirm"
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setConfirmDeleteId(null)}
+                          disabled={isDeleting}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setConfirmDeleteId(user._id)}
+                        disabled={isLoading}
+                      >
+                        <Trash className="h-4 w-4 text-red-500" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
