@@ -380,7 +380,12 @@ const Login = () => {
                   required
                 />
                 <div className="text-right">
-    <a href="" className="text-sm text-blue-500 hover:underline">
+    <a href="/forgot-password" className="text-sm text-blue-500 hover:underline"
+    onClick={(e) => {
+      e.preventDefault();
+      navigate("/forgot-password");
+    }}
+  >
       Forgot Password?
     </a>
   </div>

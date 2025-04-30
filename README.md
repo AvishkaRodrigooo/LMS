@@ -1,2 +1,2 @@
-# LMS
-Learning Management System - Mern stack project
+# LearnPlus - Learning Management System
+We created this webapp to provide an end-to-end learning environment for students and teachers to communicate and plan their school activities online. LearnPlus allows teachers to add and share courses, assignments, and quizzes and students to enroll in courses, submit assignments, and track their progress. The site is also able to support discussion with comments and forums, improving interactive learning. Admin controls for proper management of users and content are provided. Built on the MERN stack, LearnPlus is learner-focused, secure, and scalable for institutions and individual learners.

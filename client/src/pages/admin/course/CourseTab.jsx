@@ -22,7 +22,6 @@ import {
   useEditCourseMutation,
   useGetCourseByIdQuery,
   usePublishCourseMutation,
-  useDeleteCourseMutation, // Add this import
 } from "@/features/api/courseApi";
 import { Loader2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -30,6 +29,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
 const CourseTab = () => {
+  
   const [input, setInput] = useState({
     courseTitle: "",
     subTitle: "",
@@ -42,16 +42,14 @@ const CourseTab = () => {
 
   const params = useParams();
   const courseId = params.courseId;
-  const { data: courseByIdData, isLoading: courseByIdLoading, refetch } =
+  const { data: courseByIdData, isLoading: courseByIdLoading , refetch} =
     useGetCourseByIdQuery(courseId);
 
-  const [publishCourse] = usePublishCourseMutation();
-  const [deleteCourse, { isLoading: isDeleting }] = useDeleteCourseMutation(); // Add delete mutation
-  const [previewThumbnail, setPreviewThumbnail] = useState("");
-
+    const [publishCourse, {}] = usePublishCourseMutation();
+ 
   useEffect(() => {
-    if (courseByIdData?.course) {
-      const course = courseByIdData.course;
+    if (courseByIdData?.course) { 
+        const course = courseByIdData?.course;
       setInput({
         courseTitle: course.courseTitle,
         subTitle: course.subTitle,
@@ -61,21 +59,27 @@ const CourseTab = () => {
         coursePrice: course.coursePrice,
         courseThumbnail: "",
       });
-      setPreviewThumbnail(course.courseThumbnail);
     }
   }, [courseByIdData]);
 
+  const [previewThumbnail, setPreviewThumbnail] = useState("");
   const navigate = useNavigate();
-  const [editCourse, { data, isLoading, isSuccess, error }] = useEditCourseMutation();
+
+  const [editCourse, { data, isLoading, isSuccess, error }] =
+    useEditCourseMutation();
 
   const changeEventHandler = (e) => {
     const { name, value } = e.target;
     setInput({ ...input, [name]: value });
   };
 
-  const selectCategory = (value) => setInput({ ...input, category: value });
-  const selectCourseLevel = (value) => setInput({ ...input, courseLevel: value });
-
+  const selectCategory = (value) => {
+    setInput({ ...input, category: value });
+  };
+  const selectCourseLevel = (value) => {
+    setInput({ ...input, courseLevel: value });
+  };
+  // get file
   const selectThumbnail = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -101,64 +105,41 @@ const CourseTab = () => {
 
   const publishStatusHandler = async (action) => {
     try {
-      const response = await publishCourse({ courseId, query: action });
-      if (response.data) {
+      const response = await publishCourse({courseId, query:action});
+      if(response.data){
         refetch();
         toast.success(response.data.message);
       }
     } catch (error) {
       toast.error("Failed to publish or unpublish course");
     }
-  };
-
-  // Add delete course handler
-  const deleteCourseHandler = async () => {
-    try {
-      const response = await deleteCourse(courseId).unwrap();
-      toast.success(response.message || "Course deleted successfully.");
-      navigate("/admin/course"); // Redirect after deletion
-    } catch (error) {
-      toast.error(error?.data?.message || "Failed to delete course");
-    }
-  };
+  }
 
   useEffect(() => {
-    if (isSuccess) toast.success(data.message || "Course updated.");
-    if (error) toast.error(error.data.message || "Failed to update course");
+    if (isSuccess) {
+      toast.success(data.message || "Course update.");
+    }
+    if (error) {
+      toast.error(error.data.message || "Failed to update course");
+    }
   }, [isSuccess, error]);
 
-  if (courseByIdLoading) return <h1>Loading...</h1>;
-
+  if(courseByIdLoading) return <h1>Loading...</h1>
+ 
   return (
     <Card>
       <CardHeader className="flex flex-row justify-between">
         <div>
           <CardTitle>Basic Course Information</CardTitle>
           <CardDescription>
-            Make changes to your course here. Click save when you're done.
+            Make changes to your courses here. Click save when you're done.
           </CardDescription>
         </div>
         <div className="space-x-2">
-          <Button
-            disabled={courseByIdData?.course.lectures.length === 0}
-            variant="outline"
-            onClick={() => publishStatusHandler(courseByIdData?.course.isPublished ? "false" : "true")}
-          >
-            {courseByIdData?.course.isPublished ? "Unpublish" : "Publish"}
+          <Button disabled={courseByIdData?.course.lectures.length === 0} variant="outline" onClick={()=> publishStatusHandler(courseByIdData?.course.isPublished ? "false" : "true")}>
+            {courseByIdData?.course.isPublished ? "Unpublished" : "Publish"}
           </Button>
-          <Button
-            disabled={isDeleting}
-            onClick={deleteCourseHandler}
-            variant="destructive" // Optional: Use a destructive variant for clarity
-          >
-            {isDeleting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...
-              </>
-            ) : (
-              "Remove Course"
-            )}
-          </Button>
+          <Button>Remove Course</Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -190,7 +171,10 @@ const CourseTab = () => {
           <div className="flex items-center gap-5">
             <div>
               <Label>Category</Label>
-              <Select defaultValue={input.category} onValueChange={selectCategory}>
+              <Select
+                defaultValue={input.category}
+                onValueChange={selectCategory}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
@@ -199,22 +183,30 @@ const CourseTab = () => {
                     <SelectLabel>Category</SelectLabel>
                     <SelectItem value="Next JS">Next JS</SelectItem>
                     <SelectItem value="Data Science">Data Science</SelectItem>
-                    <SelectItem value="Frontend Development">Frontend Development</SelectItem>
-                    <SelectItem value="Fullstack Development">Fullstack Development</SelectItem>
-                    <SelectItem value="MERN Stack Development">MERN Stack Development</SelectItem>
+                    <SelectItem value="Frontend Development">
+                      Frontend Development
+                    </SelectItem>
+                    <SelectItem value="Fullstack Development">
+                      Fullstack Development
+                    </SelectItem>
+                    <SelectItem value="MERN Stack Development">
+                      MERN Stack Development
+                    </SelectItem>
                     <SelectItem value="Javascript">Javascript</SelectItem>
                     <SelectItem value="Python">Python</SelectItem>
                     <SelectItem value="Docker">Docker</SelectItem>
                     <SelectItem value="MongoDB">MongoDB</SelectItem>
                     <SelectItem value="HTML">HTML</SelectItem>
-                    <SelectItem value="CyberSecurity">CyberSecurity</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label>Course Level</Label>
-              <Select defaultValue={input.courseLevel} onValueChange={selectCourseLevel}>
+              <Select
+                defaultValue={input.courseLevel}
+                onValueChange={selectCourseLevel}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select a course level" />
                 </SelectTrigger>
@@ -229,7 +221,7 @@ const CourseTab = () => {
               </Select>
             </div>
             <div>
-              <Label>Price in (LKR)</Label>
+              <Label>Price in (INR)</Label>
               <Input
                 type="number"
                 name="coursePrice"
@@ -242,15 +234,33 @@ const CourseTab = () => {
           </div>
           <div>
             <Label>Course Thumbnail</Label>
-            <Input type="file" onChange={selectThumbnail} accept="image/*" className="w-fit" />
+            <Input
+              type="file"
+              onChange={selectThumbnail}
+              accept="image/*"
+              className="w-fit"
+            />
             {previewThumbnail && (
-              <img src={previewThumbnail} className="w-64 my-2 rounded-lg shadow" alt="Course Thumbnail" />
+              <img
+                src={previewThumbnail}
+                className="e-64 my-2"
+                alt="Course Thumbnail"
+              />
             )}
           </div>
           <div>
-            <Button onClick={() => navigate("/admin/course")} variant="outline">Cancel</Button>
+            <Button onClick={() => navigate("/admin/course")} variant="outline">
+              Cancel
+            </Button>
             <Button disabled={isLoading} onClick={updateCourseHandler}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait</> : "Save"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
+                </>
+              ) : (
+                "Save"
+              )}
             </Button>
           </div>
         </div>
