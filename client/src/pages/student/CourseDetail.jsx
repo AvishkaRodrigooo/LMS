@@ -54,6 +54,18 @@ const CourseDetail = () => {
             <p>Last updated {course?.createdAt.split("T")[0]}</p>
           </div>
           <p>Students enrolled: {course?.enrolledStudents.length}</p>
+
+
+          <div className="button-container">
+            <button
+              className="CDPfeedbackbtn"
+              onClick={() => navigate("/feedback")}
+            >
+              See Feedbacks
+            </button>
+          </div>
+
+
         </div>
       </div>
       <div className="max-w-7xl mx-auto my-5 px-4 md:px-8 flex flex-col lg:flex-row justify-between gap-10">
