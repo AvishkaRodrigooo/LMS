@@ -109,6 +109,29 @@ const appRouter = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+
+      
+
+      {
+        path: "feedback",
+        element: (
+          <ProtectedRoute>
+            <FeedbackHome />
+          </ProtectedRoute>
+        ),
+      },
+      
+      {
+        path: "feedback/add",
+        element: (
+          <ProtectedRoute>
+            <CreatePost />
+          </ProtectedRoute>
+        ),
+      },
+
+
+
       // admin routes start from here
       {
         path: "admin",
