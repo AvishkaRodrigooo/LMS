@@ -86,7 +86,7 @@ export default function FeedbackHome() {
         <div className="feed_col-lg-3">
           <input
             className="feed_form-control feed_btnsearch"
-            type="search"
+            type="seach"
             placeholder="Search"
             name="searchQuery"
             onChange={handleSearchArea}
