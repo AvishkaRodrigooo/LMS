@@ -144,7 +144,9 @@ export default function FeedbackHome() {
         ))}
       </div>
 
-      
+      <button className="feed_btn-success" onClick={() => navigate("/feedback/add")}>
+        Give Feedback
+      </button>
     </div>
   );
 }
