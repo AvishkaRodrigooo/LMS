@@ -29,6 +29,12 @@ import {
 import PurchaseCourseProtectedRoute from "./components/PurchaseCourseProtectedRoute";
 import { ThemeProvider } from "./components/ThemeProvider";
 
+
+import FeedbackHome from "./pages/student/FeedbackHome";
+import CreatePost from "./pages/student/CreatePost";
+import EditPost from "./pages/student/EditPost";
+import FeedbackAdminHome from "./pages/admin/feedback/FeedbackAdminHome";
+
 const appRouter = createBrowserRouter([
   {
     path: "/",
@@ -139,6 +145,15 @@ const appRouter = createBrowserRouter([
         ),
       },
 
+      {
+        path: "feedback/edit/:id",
+        element: (
+          <ProtectedRoute>
+            <EditPost />
+          </ProtectedRoute>
+        ),
+      },
+
 
 
       // admin routes start from here
@@ -183,6 +198,11 @@ const appRouter = createBrowserRouter([
           {
             path: "course/:courseId/lecture/:lectureId",
             element: <EditLecture />,
+          },
+
+          {
+            path: "AdminFeedback",
+            element: <FeedbackAdminHome />,
           },
         ],
       },
