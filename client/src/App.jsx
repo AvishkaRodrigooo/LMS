@@ -19,8 +19,14 @@ import SearchPage from "./pages/student/SearchPage";
 import AllUsers from "./pages/admin/user/AllUsers";
 import Payment from './pages/admin/payment/payment';
 import Cart from "./components/Cart";
-import Checkout from "./components/Checkout"; // Import the new Checkout component
+//PDFViewer
+import PDFViewer from "./pages/student/PDFViewer";
+
 import ForgotPassword from "./pages/ForgotPassword";
+
+import CheckoutSuccessPage  from "./components/ui/checkoutSuccess";
+
+
 import {
   AdminRoute,
   AuthenticatedUser,
@@ -29,11 +35,14 @@ import {
 import PurchaseCourseProtectedRoute from "./components/PurchaseCourseProtectedRoute";
 import { ThemeProvider } from "./components/ThemeProvider";
 
-
 import FeedbackHome from "./pages/student/FeedbackHome";
 import CreatePost from "./pages/student/CreatePost";
 import EditPost from "./pages/student/EditPost";
 import FeedbackAdminHome from "./pages/admin/feedback/FeedbackAdminHome";
+import Reply from "./pages/admin/feedback/Reply";
+import PostDetails from "./pages/admin/feedback/PostDetails";
+
+
 
 const appRouter = createBrowserRouter([
   {
@@ -116,16 +125,15 @@ const appRouter = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+     
       {
-        path: "checkout", // Add new checkout route
+        path: "checkout-success",
         element: (
           <ProtectedRoute>
-            <Checkout />
+            <CheckoutSuccessPage />
           </ProtectedRoute>
         ),
       },
-
-      
 
       {
         path: "feedback",
@@ -154,6 +162,14 @@ const appRouter = createBrowserRouter([
         ),
       },
 
+      {
+        path: "/view-pdf",
+        element: (
+          <ProtectedRoute>
+            <PDFViewer />
+          </ProtectedRoute>
+        ),
+      },
 
 
       // admin routes start from here
@@ -200,10 +216,27 @@ const appRouter = createBrowserRouter([
             element: <EditLecture />,
           },
 
+
           {
             path: "AdminFeedback",
             element: <FeedbackAdminHome />,
           },
+
+          {
+            path: "FeedbackReply/:id",
+            element: <Reply />,
+          },
+
+          {
+            path: "feedback/post/:id",
+            element: (
+              <ProtectedRoute>
+                <PostDetails />
+              </ProtectedRoute>
+            ),
+          },
+
+          
         ],
       },
     ],

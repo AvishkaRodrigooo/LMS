@@ -1,4 +1,3 @@
-// feedback/server/routes/posts.js
 import express from 'express';
 import { saveFeedback, getAllFeedback, getFeedbackById, updateFeedback, deleteFeedback } from '../controllers/feedback.controller.js'; // Import controller functions
 

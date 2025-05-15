@@ -12,7 +12,6 @@ const EditPost = () => {
 
   const [formData, setFormData] = useState({
     name: '',
-    phone: '',
     email: '',
     service: '',
     review: '',
@@ -29,7 +28,6 @@ const EditPost = () => {
         const post = res.data.post;
         setFormData({
           name: post.name,
-          phone: post.phone,
           email: post.email,
           service: post.service,
           review: post.review,
@@ -56,17 +54,14 @@ const EditPost = () => {
   };
 
   const validateForm = () => {
-    const { name, phone, email, service, review } = formData;
+    const { name, email, service, review } = formData;
 
-    if (!name || !phone || !email || !service || !review) {
+    if (!name || !email || !service || !review) {
       alert('All fields are required.');
       return false;
     }
 
-    if (!/^\d{10}$/.test(phone)) {
-      alert('Phone number must be exactly 10 digits.');
-      return false;
-    }
+    
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
@@ -78,20 +73,21 @@ const EditPost = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    try {
-      const res = await axios.put(`http://localhost:8000/api/v1/posts/post/update/${id}`, formData);
-      if (res.data.success) {
-        alert('Feedback updated successfully!');
-        navigate('/feedback');
-      }
-    } catch (err) {
-      console.error('Update failed:', err);
-      alert('Something went wrong. Please try again.');
+  try {
+    const res = await axios.put(`http://localhost:8000/api/v1/posts/post/update/${id}`, formData);
+    if (res.data.success) {
+      alert('Feedback updated successfully!');
+      navigate(`/feedback?courseId=${encodeURIComponent(formData.service)}&courseName=${encodeURIComponent(formData.service)}`);
     }
-  };
+  } catch (err) {
+    console.error('Update failed:', err);
+    alert('Something went wrong. Please try again.');
+  }
+};
+
 
   if (loading) return <div className="text-center mt-5">Loading...</div>;
   if (error) return <div className="alert alert-danger mt-3">{error}</div>;
@@ -117,13 +113,6 @@ const EditPost = () => {
       placeholder="Your Name"
     />
 
-    <input
-      type="text"
-      name="phone"
-      value={formData.phone}
-      onChange={handleChange}
-      placeholder="Phone Number"
-    />
 
     <input
       type="email"

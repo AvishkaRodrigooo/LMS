@@ -1,31 +1,29 @@
-import { Button } from "@/components/ui/button";
-import { useAddToCartMutation } from "@/features/api/cartApi";
-import { Loader2 } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router-dom"; // Add this import
+import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
+import { useAddToCartMutation } from "@/features/api/cartApi";
 
-const AddToCartButton = ({ courseId, ...props }) => {
+const AddToCartButton = ({ courseId, variant = "default", className = "" }) => {
   const [addToCart, { isLoading }] = useAddToCartMutation();
-  const navigate = useNavigate(); 
-
+  
   const handleAddToCart = async () => {
     try {
       await addToCart(courseId).unwrap();
-      navigate("/Cart");
+      alert("Course added to cart");
     } catch (error) {
       console.error("Failed to add to cart:", error);
+      alert(error?.data?.message || "Failed to add course to cart");
     }
   };
 
   return (
-    <Button 
+    <Button
+      variant={variant}
+      className={className}
       onClick={handleAddToCart}
       disabled={isLoading}
-      {...props}
     >
-      {isLoading ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      ) : null}
+      <ShoppingCart className="mr-2 h-4 w-4" />
       Add to Cart
     </Button>
   );

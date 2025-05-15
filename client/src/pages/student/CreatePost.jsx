@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import RatingSelect from "@/components/RatingSelect";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,14 +11,18 @@ const CreatePost = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    service: courseId || '',
-    review: '',
-    rating: null,
-  });
+  const location = useLocation();
+const query = new URLSearchParams(location.search);
+const courseNameFromQuery = query.get('courseName');
+
+const [form, setForm] = useState({
+  name: '',
+  email: '',
+  service: courseNameFromQuery || '',
+  review: '',
+  rating: null,
+});
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,9 +37,9 @@ const CreatePost = () => {
   };
 
   const validateForm = () => {
-    const { name, phone, email, service, review, rating } = form;
+    const { name, email, service, review, rating } = form;
 
-    if (!name || !phone || !email || !service || !review) {
+    if (!name || !email || !service || !review) {
       alert('Please fill in all fields.');
       return false;
     }
@@ -45,10 +49,7 @@ const CreatePost = () => {
       return false;
     }
 
-    if (phone.trim().length !== 10 || !/^\d{10}$/.test(phone)) {
-      alert('Phone number must be exactly 10 digits.');
-      return false;
-    }
+    
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -60,26 +61,27 @@ const CreatePost = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    try {
-      const res = await axios.post(
-        "http://localhost:8000/api/v1/posts/post/save",
-        form
-      );
+  try {
+    const res = await axios.post(
+      "http://localhost:8000/api/v1/posts/post/save",
+      form
+    );
 
-      if (res.data.success) {
-        alert('Feedback submitted successfully!');
-        navigate('/feedback');
-      } else {
-        alert('Submission failed. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      alert('Error submitting feedback. Please try again.');
+    if (res.data.success) {
+      alert('Feedback submitted successfully!');
+      navigate(`/feedback?courseId=${encodeURIComponent(form.service)}&courseName=${encodeURIComponent(form.service)}`);
+    } else {
+      alert('Submission failed. Please try again.');
     }
-  };
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    alert('Error submitting feedback. Please try again.');
+  }
+};
+
 
   return (
     <div className="max-w-2xl mx-auto mt-8 px-4">
@@ -98,14 +100,7 @@ const CreatePost = () => {
             onChange={handleChange}
             className="mt-4"
           />
-          <Input
-            type="text"
-            name="phone"
-            placeholder="Phone Number"
-            value={form.phone}
-            onChange={handleChange}
-            className="mt-4"
-          />
+          
           <Input
             type="email"
             name="email"

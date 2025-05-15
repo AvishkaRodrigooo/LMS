@@ -95,7 +95,7 @@ const FeedbackAdminHome = () => {
               <tr key={post._id}>
                 <td>{index + 1}</td>
                 <td>
-                  <a href={`/post/${post._id}`} className="text-decoration-none">
+                  <a href={`feedback/post/${post._id}`} className="text-decoration-none">
                     {post.service}
                   </a>
                 </td>

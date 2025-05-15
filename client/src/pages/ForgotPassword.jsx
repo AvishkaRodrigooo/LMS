@@ -1,12 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForgotPasswordMutation, useVerifyOTPMutation, useResetPasswordMutation } from "@/features/api/authApi";
+import {
+  useForgotPasswordMutation,
+  useVerifyOTPMutation,
+  useResetPasswordMutation,
+} from "@/features/api/authApi";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+
+const validatePassword = (password) => {
+  return {
+    hasUpperCase: /[A-Z]/.test(password),
+    hasLowerCase: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSpecialChar: /[!@#$%^&*]/.test(password),
+    isLongEnough: password.length >= 6,
+  };
+};
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -14,7 +33,7 @@ const ForgotPassword = () => {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [step, setStep] = useState(1); // 1: email, 2: OTP, 3: new password
+  const [step, setStep] = useState(1);
 
   const [forgotPassword, { isLoading: isSending }] = useForgotPasswordMutation();
   const [verifyOTP, { isLoading: isVerifying }] = useVerifyOTPMutation();
@@ -56,8 +75,17 @@ const ForgotPassword = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    const validation = validatePassword(newPassword);
+    if (
+      !validation.hasUpperCase ||
+      !validation.hasLowerCase ||
+      !validation.hasNumber ||
+      !validation.hasSpecialChar ||
+      !validation.isLongEnough
+    ) {
+      toast.error(
+        "Password must be at least 6 characters and include uppercase, lowercase, number, and special character"
+      );
       return;
     }
 
@@ -75,7 +103,11 @@ const ForgotPassword = () => {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center">
-            {step === 1 ? "Forgot Password" : step === 2 ? "Verify OTP" : "Reset Password"}
+            {step === 1
+              ? "Forgot Password"
+              : step === 2
+              ? "Verify OTP"
+              : "Reset Password"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -156,6 +188,34 @@ const ForgotPassword = () => {
                   required
                 />
               </div>
+
+              {newPassword && (
+                <div className="text-sm space-y-1">
+                  {(() => {
+                    const v = validatePassword(newPassword);
+                    return (
+                      <>
+                        <p className={v.isLongEnough ? "text-green-600" : "text-red-500"}>
+                          • At least 6 characters
+                        </p>
+                        <p className={v.hasUpperCase ? "text-green-600" : "text-red-500"}>
+                          • Contains uppercase letter
+                        </p>
+                        <p className={v.hasLowerCase ? "text-green-600" : "text-red-500"}>
+                          • Contains lowercase letter
+                        </p>
+                        <p className={v.hasNumber ? "text-green-600" : "text-red-500"}>
+                          • Contains a number
+                        </p>
+                        <p className={v.hasSpecialChar ? "text-green-600" : "text-red-500"}>
+                          • Contains special character (!@#$%^&*)
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
@@ -165,8 +225,17 @@ const ForgotPassword = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm new password"
                   required
+                  className={
+                    confirmPassword && newPassword !== confirmPassword
+                      ? "border-red-500 focus-visible:ring-red-500"
+                      : ""
+                  }
                 />
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-sm text-red-500">Passwords do not match</p>
+                )}
               </div>
+
               <Button
                 className="w-full"
                 onClick={handleResetPassword}

@@ -4,8 +4,8 @@ import Posts from '../models/posts.js';
 // Controller to save feedback
 export const saveFeedback = async (req, res) => {
   try {
-    const { name, phone, email, service, review, rating } = req.body;
-    if (!name || !phone || !email || !service || !review || !rating) {
+    const { name, email, service, review, rating } = req.body;
+    if (!name || !email || !service || !review || !rating) {
       return res.status(400).json({
         error: "All fields are required"
       });

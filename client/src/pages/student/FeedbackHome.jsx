@@ -3,7 +3,8 @@ import axios from 'axios';
 import Card from './FeedbackShared/Card.jsx';
 import StarRating from './FeedbackShared/StarRating';
 import { FaEdit, FaTrashAlt } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+
 import './FeedbackHome.css';
 
 export default function FeedbackHome() {
@@ -13,15 +14,28 @@ export default function FeedbackHome() {
   const [averageRating, setAverageRating] = useState(0);
   const navigate = useNavigate();
 
+  const useQuery = () => new URLSearchParams(useLocation().search);
+  const query = useQuery();
+  const courseIdFromQuery = query.get('courseId');
+  const courseNameFromQuery = query.get('courseName');
+
   useEffect(() => {
     retrievePosts();
-  }, []);
+  }, [courseNameFromQuery]);
 
   const retrievePosts = async () => {
     try {
       const res = await axios.get("http://localhost:8000/api/v1/posts/posts");
       if (res.data.success) {
-        const postsData = res.data.existingPosts;
+        let postsData = res.data.existingPosts;
+
+        // ✅ Filter by courseName if available
+        if (courseNameFromQuery) {
+          postsData = postsData.filter(
+            (post) => post.service === courseNameFromQuery
+          );
+        }
+
         setPosts(postsData);
         setReviewCount(postsData.length);
         setAverageRating(calculateAverageRating(postsData));
@@ -40,8 +54,6 @@ export default function FeedbackHome() {
       } catch (error) {
         console.error("Error deleting post:", error.message);
       }
-    } else {
-      alert("Deletion canceled");
     }
   };
 
@@ -59,7 +71,13 @@ export default function FeedbackHome() {
     try {
       const res = await axios.get("http://localhost:8000/api/v1/posts/posts");
       if (res.data.success) {
-        filterData(res.data.existingPosts, searchKey);
+        let filteredPosts = res.data.existingPosts;
+        if (courseNameFromQuery) {
+          filteredPosts = filteredPosts.filter(
+            (post) => post.service === courseNameFromQuery
+          );
+        }
+        filterData(filteredPosts, searchKey);
       }
     } catch (error) {
       console.error("Error filtering posts:", error.message);
@@ -79,7 +97,7 @@ export default function FeedbackHome() {
     <div className='feed_body'>
       <div className="feed-row">
         <div className="feed_col-lg-9">
-          <h4 className='feed_header'>All Feedbacks</h4><br />
+          <h4 className='feed_header'>Feedback for: {courseNameFromQuery || 'All Courses'}</h4><br />
           <p>Total Reviews: {reviewCount}</p>
           <p>Average Rating: {averageRating.toFixed(2)}</p>
         </div>
@@ -95,9 +113,8 @@ export default function FeedbackHome() {
       </div>
 
       <div className="feed_post-list">
-        {posts.map((post, index) => (
-          <Card key={index} className="feed_post-card">
-            
+        {posts.map((post) => (
+          <Card key={post._id} className="feed_post-card">
 
             <div className="feed_num-display_star">
               {post.rating !== null && post.rating !== undefined ? (
@@ -107,11 +124,10 @@ export default function FeedbackHome() {
               )}
             </div>
 
-
             <button onClick={() => onDelete(post._id)} className="feed_close">
-            <FaTrashAlt color="black" size={20} />
-
+              <FaTrashAlt color="black" size={20} />
             </button>
+
             <button
               className="feed_edit-button"
               onClick={() => navigate(`/feedback/edit/${post._id}`)}
@@ -119,8 +135,7 @@ export default function FeedbackHome() {
               <FaEdit color="black" size={20} />
             </button>
 
-            <div className="feed_text-display">{post.text}</div>
-            <div>
+            <div className="feed_text-display">
               <div>Review: {post.review}</div>
               <div className='feed_answer'>Answer: {post.reply}</div><br />
 
@@ -131,8 +146,8 @@ export default function FeedbackHome() {
               )}
               {expanded[post._id] && (
                 <div>
-                  <div>Course: {post.service}</div>
                   <div>Name: {post.name}</div>
+                  <div>Email: {post.email}</div>
 
                   <button onClick={() => toggleExpand(post._id)} className='feed_see-more'>
                     See Less
@@ -144,9 +159,16 @@ export default function FeedbackHome() {
         ))}
       </div>
 
-      <button className="feed_btn-success" onClick={() => navigate("/feedback/add")}>
-        Give Feedback
-      </button>
+      {courseIdFromQuery && courseNameFromQuery && (
+        <button
+          className="feed_btn-success"
+          onClick={() =>
+            navigate(`/feedback/add?courseId=${courseIdFromQuery}&courseName=${encodeURIComponent(courseNameFromQuery)}`)
+          }
+        >
+          Give Feedback
+        </button>
+      )}
     </div>
   );
 }

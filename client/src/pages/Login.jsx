@@ -303,14 +303,14 @@ const Login = () => {
                   required
                 >
                   <option value="">Select Role</option>
-                  <option value="Web Developeing">Web Developer</option>
+                  <option value="Web Developeing">Web Developing</option>
                   <option value="Software Engineering">Software Engineering</option>
-                  <option value="Graphic Designing">Graphic Designing</option>
+                  <option value="graphic-designing">Graphic Designing</option>
                   <option value="Data science">Data Science</option>
                   <option value="Network Engineering">Network Engineering</option>
                   <option value="Cybersecurity">Cybersecurity</option>
                   <option value="Business Analyst">Business Analyst</option>
-                  <option value="Mobile Application Development">Mobile Application Development</option>
+                  <option value="Mobile Application Developing">Mobile Application Development</option>
                 </select>
               </div>
             </CardContent>

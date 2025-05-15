@@ -1,18 +1,22 @@
 import express from "express";
-import {
-  getCart,
-  addToCart,
-  removeFromCart,
-  createCheckoutSession,
-} from "../controllers/cart.controller.js";
 import isAuthenticated from "../middlewares/isAuthenticated.js";
+import { 
+  getCartItems, 
+  addToCart, 
+  removeFromCart, 
+  clearCart, 
+  createCartCheckoutSession,
+  getCartCount
+} from "../controllers/cart.controller.js";
 
 const router = express.Router();
 
-router.use(isAuthenticated);
+// Cart routes
+router.route("/").get(isAuthenticated, getCartItems);
+router.route("/add").post(isAuthenticated, addToCart);
+router.route("/remove/:courseId").delete(isAuthenticated, removeFromCart);
+router.route("/clear").delete(isAuthenticated, clearCart);
+router.route("/checkout").post(isAuthenticated, createCartCheckoutSession);
+router.route("/count").get(isAuthenticated, getCartCount);
 
-router.route("/").get(getCart).post(addToCart);
-router.route("/:courseId").delete(removeFromCart);
-router.route("/create-checkout-session").post(createCheckoutSession);
-
-export default router;
+export default router;
