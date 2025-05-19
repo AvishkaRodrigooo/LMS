@@ -1,5 +1,7 @@
 import { Menu, School } from "lucide-react";
 import React, { useEffect } from "react";
+
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +31,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { FaShoppingCart } from "react-icons/fa";
 import { Badge } from "./ui/badge";
 import { clearCart } from "@/features/cartSlice";
+import Swal from 'sweetalert2';
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -38,11 +41,26 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const logoutHandler = async () => {
-    try {
-      await logoutUser().unwrap();
-      dispatch(clearCart());
-    } catch (error) {
-      toast.error("Logout failed");
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#255680",
+      cancelButtonColor: "#61707d",
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      background: "#b2bcd1", // Solid white background
+    //backdrop: 'rgba(177, 194, 220, 0.36)', // Semi-transparent overlay (optional
+      
+  });
+    if (result.isConfirmed) {
+      try {
+        await logoutUser().unwrap();
+        dispatch(clearCart());
+      } catch (error) {
+        toast.error("Logout failed");
+      }
     }
   };
 

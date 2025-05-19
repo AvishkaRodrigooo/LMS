@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-
+import { Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
@@ -22,6 +22,7 @@ import {
   useDeleteUserMutation,
   useChangePasswordMutation,
 } from "@/features/api/authApi";
+import Swal from 'sweetalert2';
 
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,6 +41,8 @@ const [currentPassword, setCurrentPassword] = useState("");
 const [newPassword, setNewPassword] = useState("");
 const [confirmNewPassword, setConfirmNewPassword] = useState("");
 const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+const [isCurrentPasswordInvalid, setIsCurrentPasswordInvalid] =
+useState(false);
 
 const [passwordValidation, setPasswordValidation] = useState({
   hasUpperCase: false,
@@ -81,41 +84,41 @@ const validatePassword = (password) => {
   //delete function
   
   const handleDeleteAccount = async () => {
-    toast(
-        (t) => (
-            <div className="flex flex-col items-center gap-4">
-                <p className="text-center">
-                    Are you sure you want to delete your account? <br />
-                    This action is <span className="text-red-500 font-bold">irreversible</span>.
-                </p>
-                <div className="flex gap-4">
-                    <button
-                        className="bg-red-500 text-white px-4 py-2 rounded"
-                        onClick={async () => {
-                            try {
-                                await deleteUser();
-                                toast.success("Account deleted successfully.");
-                                navigate("/login");
-                            } catch (error) {
-                                console.error("Failed to delete account:", error);
-                                toast.error("Failed to delete account. Please try again.");
-                            }
-                            toast.dismiss(t); // Close the toast
-                        }}
-                    >
-                        OK
-                    </button>
-                    <button
-                        className="bg-gray-500 text-white px-4 py-2 rounded"
-                        onClick={() => toast.dismiss(t)} // Close the toast on cancel
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        ),
-        { duration: Infinity } // Keeps the toast open until the user responds
-    );
+    // Show SweetAlert2 confirmation dialog
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'This action is irreversible.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#255680',
+        cancelButtonColor: '#61707d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        background: "#b2bcd1", 
+    });
+
+    // If the user confirmed the deletion
+    if (result.isConfirmed) {
+        try {
+            await deleteUser();
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Your account has been deleted.',
+                confirmButtonText: 'Okay',
+                background: "#b2bcd1", 
+            });
+            navigate("/login");
+        } catch (error) {
+            console.error("Failed to delete account:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: 'Failed to delete account. Please try again.',
+                confirmButtonText: 'Okay'
+            });
+        }
+    }
 };////
 ///change passwor-----------
 const handlePasswordChange = async () => {
@@ -136,7 +139,9 @@ if (newPassword !== confirmNewPassword) {
           setCurrentPassword("");
           setNewPassword("");
           setConfirmNewPassword("");
+          setIsCurrentPasswordInvalid(false); // reset error
       } else {
+        setIsCurrentPasswordInvalid(true); // show red border
           toast.error(result.error?.data?.message || "Failed to change password");
       }
   } catch (error) {
@@ -229,11 +234,14 @@ if (newPassword !== confirmNewPassword) {
               </span>
             </h1>
           </div>
+         
           <Dialog>
             <DialogTrigger asChild>
               <Button size="sm" className="mt-2">
                 Edit Profile
               </Button>
+
+              
             </DialogTrigger>
 
               {/*//////////change password*/}
@@ -258,8 +266,10 @@ if (newPassword !== confirmNewPassword) {
                     id="currentPassword"
                     type="password"
                     value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="col-span-3"
+                    onChange={(e) => {setCurrentPassword(e.target.value);
+                      setIsCurrentPasswordInvalid(false)}
+                    }
+                    className={`col-span-3 ${isCurrentPasswordInvalid ? "border-red-500" : ""}`}
                 />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -306,7 +316,11 @@ if (newPassword !== confirmNewPassword) {
                     type="password"
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="col-span-3"
+                    className={`col-span-3 ${
+                      confirmNewPassword && confirmNewPassword !== newPassword
+                        ? "border-red-600"
+                        : ""
+                    }`}
                 />
             </div>
         </div>
@@ -321,12 +335,23 @@ if (newPassword !== confirmNewPassword) {
                         Changing...
                     </>
                 ) : (
-                    "Change Password"
+                    "Save changes"
                 )}
             </Button>
         </DialogFooter>
     </DialogContent>
 </Dialog>
+
+{/**delte button create */}
+<Button
+    variant="ghost"
+    size="icon"
+    onClick={handleDeleteAccount}
+    className="ml-3"
+  >
+    <Trash className="h-4 w-4 text-red-500" />
+  </Button>
+
               
               
                {/*////////////change password*/}
@@ -361,7 +386,7 @@ if (newPassword !== confirmNewPassword) {
                 </div>
                 {/* Dropdown for Path */}
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label>My Path</Label>
+                  <Label>My Role</Label>
                   <Select onValueChange={setPath} value={path}>
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select your path" />
@@ -395,9 +420,13 @@ if (newPassword !== confirmNewPassword) {
                 </Button>
               </DialogFooter>
             </DialogContent>
+            
           </Dialog>
+        
         </div>
+        
       </div>
+      
       <div>
         <h1 className="font-medium text-lg">My Courses</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-5">
