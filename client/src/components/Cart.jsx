@@ -1,88 +1,125 @@
-import { useGetCartQuery, useRemoveFromCartMutation } from "@/features/api/cartApi";
+import React from "react";
+import { useGetCartItemsQuery, useRemoveFromCartMutation, useClearCartMutation, useCreateCartCheckoutSessionMutation } from "@/features/api/cartApi";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { useEffect } from "react";
+import { ShoppingCart, Trash, X, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
-const Cart = () => {
-  const { data: cartData, isLoading, error } = useGetCartQuery();
+const CartPage = () => {
+  const { data, isLoading, error } = useGetCartItemsQuery();
   const [removeFromCart] = useRemoveFromCartMutation();
+  const [clearCart] = useClearCartMutation();
+  const [createCheckout, { isLoading: isCheckoutLoading }] = useCreateCartCheckoutSessionMutation();
+  const navigate = useNavigate();
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Full Cart Data:', cartData);
-  }, [cartData]);
-  
-  const handleRemove = async (courseId) => {
+  const handleRemoveItem = async (courseId) => {
     try {
       await removeFromCart(courseId).unwrap();
+      toast.success("Item removed from cart");
     } catch (error) {
-      console.error("Remove error:", error);
+      toast.error("Failed to remove item");
     }
   };
 
-  if (isLoading) return <div>Loading cart...</div>;
+  const handleClearCart = async () => {
+    try {
+      await clearCart().unwrap();
+      toast.success("Cart cleared");
+    } catch (error) {
+      toast.error("Failed to clear cart");
+    }
+  };
 
-  if (error) return <div>Error loading cart: {error.toString()}</div>;
+  const handleCheckout = async () => {
+    try {
+      const response = await createCheckout().unwrap();
+      if (response.url) {
+        window.location.href = response.url;
+      }
+    } catch (error) {
+      toast.error("Failed to create checkout session");
+    }
+  };
 
-  // Handle case when cart is undefined or has no items
-  if (!cartData?.cart?.items || cartData.cart.items.length === 0) {
+  if (isLoading) return <div className="flex justify-center mt-8">Loading your cart...</div>;
+  if (error) return <div className="text-center text-red-500 mt-8">Error loading cart</div>;
+
+  const cartItems = data?.cart?.items || [];
+  const totalPrice = data?.cart?.totalPrice || 0;
+
+  if (cartItems.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-600 mb-4">Your cart is empty</p>
-        <Link to="/" className="text-blue-600 hover:underline">
-          Browse Courses
-        </Link>
+      <div className="max-w-4xl mx-auto p-4 mt-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <ShoppingCart size={64} className="text-gray-400" />
+          <h1 className="text-2xl font-bold">Your cart is empty</h1>
+          <p className="text-gray-500">Looks like you haven't added any courses yet.</p>
+          <Button onClick={() => navigate("/")}>Browse Courses</Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6"> Shopping Cart</h1>
-      
-      <div className="space-y-4">
-        {cartData.cart.items.map((item) => {
-          const course = item.courseId;
-          
-          return (
-            <div 
-              key={course._id} 
-              className="flex items-center justify-between p-4 border rounded-lg"
-            >
-              <div className="flex items-center gap-4">
-                <img 
-                  src={course.courseThumbnail || '/placeholder-course.jpg'} 
-                  alt={course.courseTitle || 'Course Image'}
-                  className="w-20 h-20 object-cover rounded"
-                />
-                <div>
-                  <h3 className="font-semibold">{course.courseTitle || 'Untitled Course'}</h3>
-                  <p className="text-gray-600">
-                    LKR {Number(course.coursePrice || 0).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-              <Button 
-                variant="destructive"
-                onClick={() => handleRemove(course._id)}
-              >
-                Remove
-              </Button>
-            </div>
-          );
-        })}
-        
-        <div className="mt-6 flex justify-end">
-          <Link 
-            to="/checkout"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Your Cart ({cartItems.length} items)</h1>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleClearCart}
+          className="text-red-500 border-red-500 hover:bg-red-50 hover:text-red-600"
+        >
+          <Trash size={16} className="mr-2" /> Clear Cart
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-4 mb-8">
+        {cartItems.map((item) => (
+          <div 
+            key={item.courseId._id} 
+            className="flex justify-between items-center border rounded-lg p-4 shadow-sm"
           >
-            Proceed to Checkout
-          </Link>
+            <div className="flex items-center gap-4">
+              <img 
+                src={item.courseId.courseThumbnail || "/placeholder-course.png"} 
+                alt={item.courseId.courseTitle}
+                className="w-20 h-20 object-cover rounded"
+              />
+              <div>
+                <h3 className="font-semibold">{item.courseId.courseTitle}</h3>
+                <p className="text-lg font-medium">
+                  LKR {item.courseId.coursePrice.toFixed(2)}
+                </p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => handleRemoveItem(item.courseId._id)}
+              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+            >
+              <X size={20} />
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t pt-4">
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-lg font-medium">Total:</span>
+          <span className="text-2xl font-bold">LKR {totalPrice.toFixed(2)}</span>
         </div>
+        <Button 
+          onClick={handleCheckout} 
+          disabled={isCheckoutLoading} 
+          className="w-full py-6"
+        >
+          {isCheckoutLoading ? "Processing..." : "Checkout"} <ArrowRight className="ml-2" size={16} />
+        </Button>
       </div>
     </div>
   );
 };
 
-export default Cart;
+export default CartPage;
